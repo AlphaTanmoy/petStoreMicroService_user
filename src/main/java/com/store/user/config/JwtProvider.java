@@ -1,12 +1,11 @@
 package com.store.user.config;
 
-import com.store.authentication.config.KeywordsAndConstants;
-import com.store.authentication.enums.TIRE_CODE;
-import com.store.authentication.enums.USER_ROLE;
-import com.store.authentication.error.BadRequestException;
-import com.store.authentication.model.User;
-import com.store.authentication.repo.UserRepository;
-import com.store.authentication.utils.EncryptionUtils;
+import com.store.user.enums.TIRE_CODE;
+import com.store.user.enums.USER_ROLE;
+import com.store.user.error.BadRequestException;
+import com.store.user.model.Users;
+import com.store.user.repo.UserRepository;
+import com.store.user.utils.EncryptionUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -56,7 +55,7 @@ public class JwtProvider {
 	}
 
 	private String fetchUserIdByEmail(String email) {
-		Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
+		Optional<Users> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
 		if (userOptional.isPresent()) {
 			return String.valueOf(userOptional.get().getId());
 		}

@@ -1,9 +1,9 @@
 package com.store.user.utils;
 
-import com.store.authentication.enums.TIRE_CODE;
-import com.store.authentication.error.BadRequestException;
-import com.store.authentication.model.User;
-import com.store.authentication.repo.UserRepository;
+import com.store.user.enums.TIRE_CODE;
+import com.store.user.error.BadRequestException;
+import com.store.user.model.Users;
+import com.store.user.repo.UserRepository;
 import org.springframework.stereotype.Component;
 
 import java.util.Objects;
@@ -19,8 +19,8 @@ public class ValidateTire {
     }
 
     public static boolean hierarchyTireManagement(String ownerID, String userID) {
-        Optional<User> findOwnerUser = userRepository.findById(ownerID);
-        Optional<User> findUser = userRepository.findById(userID);
+        Optional<Users> findOwnerUser = userRepository.findById(ownerID);
+        Optional<Users> findUser = userRepository.findById(userID);
 
         if (findOwnerUser.isPresent() && findUser.isPresent()) {
             BadRequestException badRequestException = new BadRequestException();

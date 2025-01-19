@@ -1,6 +1,6 @@
 package com.store.user.utils;
 
-import com.store.authentication.config.KeywordsAndConstants;
+import com.store.user.config.KeywordsAndConstants;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
