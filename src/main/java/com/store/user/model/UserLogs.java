@@ -1,6 +1,7 @@
 package com.store.user.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.store.user.model.User;
 import com.store.user.model.superEntity.SuperEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -14,7 +15,7 @@ public class UserLogs extends SuperEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private Users user;
+    private User user;
 
     @Column(nullable = false)
     private String ipAddress;

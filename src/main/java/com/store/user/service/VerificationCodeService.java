@@ -1,68 +1,49 @@
 package com.store.user.service;
 
-import com.store.user.RestTemplateMaster;
 import com.store.user.error.BadRequestException;
+import com.store.user.model.VerificationCode;
+import com.store.user.repo.VerificationCodeRepository;
 import com.store.user.response.VerificationCodeGrabber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
-import java.util.Objects;
-
-import static com.store.user.config.KeywordsAndConstants.AUTH_MICROSERVICE_BASE_URL_LOC;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class VerificationCodeService {
 
+    private VerificationCodeRepository verificationCodeRepository;
+
     @Autowired
-    private final RestTemplateMaster restTemplateMaster;
+    public VerificationCodeService(VerificationCodeRepository verificationCodeRepository) {
+        this.verificationCodeRepository = verificationCodeRepository;
+    }
 
-    public VerificationCodeGrabber getVerificationEntityResponse(String emailId){
-        String urlWithParams = UriComponentsBuilder
-                .fromUri(URI.create(AUTH_MICROSERVICE_BASE_URL_LOC + "/verificationCode/getCode/" + emailId))
-                .toUriString();
+    public VerificationCode findVerificationCodesByEmail(String email) throws BadRequestException {
+        BadRequestException badRequestException = new BadRequestException();
 
-        ResponseEntity<VerificationCodeGrabber> response = restTemplateMaster.getRestTemplate().exchange(
-                urlWithParams,
-                HttpMethod.POST,
-                null,
-                VerificationCodeGrabber.class
-        );
+        List<VerificationCode> codes = verificationCodeRepository.findByEmail(email);
 
-        if(Objects.requireNonNull(response.getBody()).getOtp().isEmpty()) {
-            BadRequestException badRequestException = new BadRequestException();
-            badRequestException.setErrorMessage("Inner Microservice Communication Failed to Execute");
-            badRequestException.setErrorType("Failed to get Verification Code for -> "+emailId);
+        if (codes.isEmpty()) {
+            badRequestException.setErrorMessage("No OTPs found for Email Id: " + email);
+            throw badRequestException;
+        }
+        return codes.get(0);
+    }
+
+    public void saveVerificationCodesByEmail(VerificationCodeGrabber verificationCodeGrabber){
+        BadRequestException badRequestException = new BadRequestException();
+
+        List<VerificationCode> codes = verificationCodeRepository.findByEmail(verificationCodeGrabber.getEmail());
+        if (codes.isEmpty()) {
+            badRequestException.setErrorMessage("Can't Save for: " + verificationCodeGrabber.getEmail());
             throw badRequestException;
         }
 
-        return response.getBody();
+        codes.get(0).setUser(verificationCodeGrabber.getUser());
+        verificationCodeRepository.save(codes.get(0));
     }
 
-    public void saveVerificationCode(VerificationCodeGrabber verificationCodeGrabber){
-        String urlWithParams = UriComponentsBuilder
-                .fromUri(URI.create(AUTH_MICROSERVICE_BASE_URL_LOC + "/verificationCode/save"))
-                .toUriString();
-
-        HttpEntity<VerificationCodeGrabber> requestEntity = new HttpEntity<>(verificationCodeGrabber);
-
-        ResponseEntity<VerificationCodeGrabber> response = restTemplateMaster.getRestTemplate().exchange(
-                urlWithParams,
-                HttpMethod.POST,
-                requestEntity,
-                VerificationCodeGrabber.class
-        );
-
-        if(!response.getStatusCode().is2xxSuccessful()){
-            BadRequestException badRequestException = new BadRequestException();
-            badRequestException.setErrorMessage("Inner Microservice Communication Failed to Execute");
-            badRequestException.setErrorType("Failed to Save Verification Code");
-        }
-    }
 }

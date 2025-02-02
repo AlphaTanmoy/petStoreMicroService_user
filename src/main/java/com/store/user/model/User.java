@@ -1,26 +1,27 @@
 package com.store.user.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.store.user.enums.TIRE_CODE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.model.superEntity.SuperEntity;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "users")
-public class Users extends SuperEntity {
+public class User extends SuperEntity {
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
@@ -32,10 +33,9 @@ public class Users extends SuperEntity {
 
     private String mobile;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private USER_ROLE role;
-
-    @OneToMany
-    private Set<Address> addresses=new HashSet<>();
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
@@ -43,13 +43,5 @@ public class Users extends SuperEntity {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.PERSIST, orphanRemoval = true)
     private List<UserLogs> devices = new ArrayList<>();
-
-    @JsonIgnore
-    @ManyToMany
-    @JoinTable(
-            name = "user_coupons",
-            inverseJoinColumns = @JoinColumn(name = "coupon_id")
-    )
-    private Set<Coupon> usedCoupons=new HashSet<>();
 
 }
