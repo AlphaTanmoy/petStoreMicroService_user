@@ -1,13 +1,13 @@
 package com.store.user.repo;
 
-import com.store.user.model.UserLogs;
+import com.store.user.model.CustomerLogs;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface UserLogsRepository extends JpaRepository<UserLogs,String> {
+public interface CustomerLogsRepository extends JpaRepository<CustomerLogs,String> {
 
     @Query(
             value = "SELECT COUNT(*) FROM user_logs ul JOIN users u ON ul.user_id = u.id WHERE u.email = :email"

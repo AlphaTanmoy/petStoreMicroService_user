@@ -3,8 +3,8 @@ package com.store.user.service;
 
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
-import com.store.user.model.User;
-import com.store.user.repo.UserRepository;
+import com.store.user.model.Customer;
+import com.store.user.repo.CustomerRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,16 +17,16 @@ import java.util.List;
 @Service
 public class CustomUserServiceImplementation implements UserDetailsService {
 
-    private final UserRepository userRepository;
+    private final CustomerRepository userRepository;
 
-    public CustomUserServiceImplementation(UserRepository userRepository) {
+    public CustomUserServiceImplementation(CustomerRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws BadRequestException {
 
-        User user = userRepository.findByEmail(username);
+        Customer user = userRepository.findByEmail(username);
         if (user != null) {
             return buildUserDetails(user.getEmail(), user.getPassword(), user.getRole());
         }

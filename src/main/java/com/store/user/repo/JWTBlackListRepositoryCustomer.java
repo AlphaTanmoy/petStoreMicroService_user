@@ -1,11 +1,11 @@
 package com.store.user.repo;
 
-import com.store.authentication.model.JwtBlackList;
+import com.store.user.model.JwtBlackListCustomer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface JWTBlackListRepository extends JpaRepository<JwtBlackList,String> {
+public interface JWTBlackListRepositoryCustomer extends JpaRepository<JwtBlackListCustomer,String> {
 
     @Query(
             value = "SELECT COUNT(*) FROM jwt_black_list jwt WHERE jwt.action_taken_on = :id"

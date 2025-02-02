@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
-@Table(name = "jwt_black_list")
-public class JwtBlackList extends SuperEntityWithOutDataStatus {
+@Table(name = "jwt_black_list_customer")
+public class JwtBlackListCustomer extends SuperEntityWithOutDataStatus {
 
     @Column(nullable = false)
     private String actionTakenOn;

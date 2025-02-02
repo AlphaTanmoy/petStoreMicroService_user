@@ -3,9 +3,9 @@ package com.store.user.service;
 import com.store.user.enums.DATA_STATUS;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
-import com.store.user.model.JwtBlackList;
-import com.store.user.model.User;
-import com.store.user.repo.JWTBlackListRepository;
+import com.store.user.model.Customer;
+import com.store.user.model.JwtBlackListCustomer;
+import com.store.user.repo.JWTBlackListRepositoryCustomer;
 import com.store.user.request.JWTBlackListRequest;
 import com.store.user.response.JWTBlackListResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,8 +17,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class JWTBlackListService {
 
-    private final JWTBlackListRepository jwtBlackListRepository;
-    private final UserService userService;
+    private final JWTBlackListRepositoryCustomer jwtBlackListRepository;
+    private final CustomerService userService;
 
 
     public boolean findBlackListedUserById(String userId){
@@ -32,7 +32,7 @@ public class JWTBlackListService {
         JWTBlackListResponse jwtBlackListResponse = new JWTBlackListResponse();
         BadRequestException badRequestException = new BadRequestException();
 
-        Optional<User> actionTaker = userService.findUserById(actionTakerId);
+        Optional<Customer> actionTaker = userService.findCustomerById(actionTakerId);
         USER_ROLE adminOrMasterConfirmation = actionTaker.get().getRole();
 
         if(adminOrMasterConfirmation.toString().equals(USER_ROLE.ROLE_ADMIN.toString())
@@ -40,13 +40,13 @@ public class JWTBlackListService {
             badRequestException.setErrorMessage("Only Admin and Master Users can have this access! ");
         }
 
-        Optional<User> foundUser = userService.findUserById(jwtBlackListRequest.getActionTakenForId());
+        Optional<Customer> foundUser = userService.findCustomerById(jwtBlackListRequest.getActionTakenForId());
         if(foundUser.isEmpty()){
             badRequestException.setErrorMessage("User not found");
             throw badRequestException;
         }
 
-        Optional<JwtBlackList> foundUserFormJwtBlackList = jwtBlackListRepository.findById(jwtBlackListRequest.getActionTakenForId());
+        Optional<JwtBlackListCustomer> foundUserFormJwtBlackList = jwtBlackListRepository.findById(jwtBlackListRequest.getActionTakenForId());
         if(foundUserFormJwtBlackList.isPresent()) {
             badRequestException.setErrorMessage("User already in JWT Black List");
             throw badRequestException;
@@ -58,11 +58,11 @@ public class JWTBlackListService {
             throw badRequestException;
         }else{
             foundUser.get().setDATASTATUS(DATA_STATUS.INACTIVE);
-            userService.saveUser(foundUser.get());
+            userService.saveCustomer(foundUser.get());
         }
 
         if(addToJwtBlackList) {
-            JwtBlackList jwtBlackList = new JwtBlackList();
+            JwtBlackListCustomer jwtBlackList = new JwtBlackListCustomer();
             jwtBlackList.setActionTakenBy(actionTakerId);
             jwtBlackList.setComment(jwtBlackListRequest.getComment());
             jwtBlackList.setActionTakenOn(jwtBlackListRequest.getActionTakenForId());

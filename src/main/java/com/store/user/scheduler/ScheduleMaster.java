@@ -3,7 +3,6 @@ package com.store.user.scheduler;
 import com.store.user.model.VerificationCode;
 import com.store.user.repo.InfoLoggerRepository;
 import com.store.user.repo.VerificationCodeRepository;
-import com.store.user.service.ApiKeyService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 

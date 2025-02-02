@@ -42,7 +42,7 @@ public class VerificationCodeService {
             throw badRequestException;
         }
 
-        codes.get(0).setUser(verificationCodeGrabber.getUser());
+        codes.get(0).setCustomer(verificationCodeGrabber.getCustomer());
         verificationCodeRepository.save(codes.get(0));
     }
 

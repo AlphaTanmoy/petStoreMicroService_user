@@ -1,6 +1,5 @@
 package com.store.user.model;
 
-import com.store.user.model.User;
 import com.store.user.model.superEntity.SuperEntityWithoutExpiry;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,7 +28,7 @@ public class VerificationCode extends SuperEntityWithoutExpiry {
     private String email;
 
     @OneToOne
-    private User user;
+    private Customer customer;
 
     @Column(nullable = false)
     private LocalDateTime expiryDate =LocalDateTime.now().plusMinutes(OTP_EXPIRED_IN_MINUTES);

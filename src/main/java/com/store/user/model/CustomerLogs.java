@@ -1,7 +1,6 @@
 package com.store.user.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.store.user.model.User;
 import com.store.user.model.superEntity.SuperEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -11,11 +10,11 @@ import lombok.EqualsAndHashCode;
 @Entity
 @Data
 @Table(name = "user_logs")
-public class UserLogs extends SuperEntity {
+public class CustomerLogs extends SuperEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Customer customer;
 
     @Column(nullable = false)
     private String ipAddress;

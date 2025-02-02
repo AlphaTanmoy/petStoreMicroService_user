@@ -9,8 +9,8 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
-@Table(name = "info_logger")
-public class InfoLogger extends SuperEntity {
+@Table(name = "info_logger_customer")
+public class CustomerInfoLogger extends SuperEntity {
 
     @Column(nullable = false)
     private String message;

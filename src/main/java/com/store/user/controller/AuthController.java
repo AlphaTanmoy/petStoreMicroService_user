@@ -4,16 +4,15 @@ import com.store.user.config.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
-import com.store.user.model.User;
+import com.store.user.model.Customer;
 import com.store.user.request.LoginRequest;
 import com.store.user.request.RequestEmail;
 import com.store.user.request.SignUpRequest;
 import com.store.user.response.ApiResponse;
 import com.store.user.response.AuthResponse;
 import com.store.user.response.GetProfile;
-import com.store.user.service.ApiKeyService;
-import com.store.user.service.AuthService;
-import com.store.user.service.UserService;
+import com.store.user.service.CustomerAuthService;
+import com.store.user.service.CustomerService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +27,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final CustomerAuthService authService;
     private final JwtProvider jwtProvider;
-    private final UserService userService;
-    private final ApiKeyService apiKeyService;
+    private final CustomerService userService;
 
     @PostMapping("/signUp")
     public ResponseEntity<AuthResponse> createUserHandler(@RequestBody SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
@@ -77,14 +75,11 @@ public class AuthController {
         }
 
         String actionTakerId = jwtProvider.getIdFromJwtToken(token);
-        Optional<User> findUser = userService.findUserById(actionTakerId);
+        Optional<Customer> findUser = userService.findCustomerById(actionTakerId);
         GetProfile getProfile = new GetProfile();
 
         if(findUser.isPresent()){
             getProfile.setName(findUser.get().getFullName());
-            String apiKey = apiKeyService.findApiKeyByUserId(findUser.get().getId());
-            if(apiKey == null) getProfile.setApiKey("No API Key Present");
-            else getProfile.setApiKey(apiKey);
             getProfile.setUserRole(findUser.get().getRole());
             getProfile.setTireCode(findUser.get().getTireCode());
         }
