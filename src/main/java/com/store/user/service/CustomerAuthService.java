@@ -6,11 +6,9 @@ import com.store.user.enums.INFO_LOG_TYPE;
 import com.store.user.enums.TIRE_CODE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
-import com.store.user.model.Customer;
-import com.store.user.model.CustomerInfoLogger;
-import com.store.user.model.CustomerLogs;
-import com.store.user.model.VerificationCode;
+import com.store.user.model.*;
 import com.store.user.repo.*;
+import com.store.user.request.AddAddressRequest;
 import com.store.user.request.LoginRequest;
 import com.store.user.request.SignUpRequest;
 import com.store.user.response.AuthResponse;
@@ -30,27 +28,29 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class CustomerAuthService {
 
-    private final CustomerRepository CustomerRepository;
-    private final CustomerLogsRepository CustomerLogsRepository;
+    private final CustomerRepository customerRepository;
+    private final CustomerLogsRepository customerLogsRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
     private final VerificationCodeRepository verificationCodeRepository;
     private final EmailService emailService;
     private final CustomUserServiceImplementation customUserDetails;
-    private final CustomerInfoLoggerRepository CustomerInfoLoggerRepository;
+    private final CustomerInfoLoggerRepository customerInfoLoggerRepository;
     private final JWTBlackListRepositoryCustomer JWTBlackListRepositoryCustomer;
+    private final CustomerAddressRepository customerAddressRepository;
 
     public void sentLoginOtp(String email) throws BadRequestException {
 
-        long userCount = CustomerRepository.countUserByEmail(email);
+        long userCount = customerRepository.countUserByEmail(email);
         if(userCount>0){
-            Customer findConfirmedUser = CustomerRepository.findByEmail(email);
+            Customer findConfirmedUser = customerRepository.findByEmail(email);
             Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
             if(jwtBlackListCount>0) throw new BadRequestException(
                     findConfirmedUser.getFullName()+", You are blackListed. Contact Support For Remove As BlackList"+findConfirmedUser.getRole()+"!"
@@ -59,7 +59,7 @@ public class CustomerAuthService {
 
         if (email.startsWith(KeywordsAndConstants.SIGNING_PREFIX)) {
             email = email.substring(KeywordsAndConstants.SIGNING_PREFIX.length());
-            Customer user=CustomerRepository.findByEmail(email);
+            Customer user=customerRepository.findByEmail(email);
             if(user==null) throw new BadRequestException("User not found with this email!");
         }
 
@@ -86,15 +86,15 @@ public class CustomerAuthService {
         infoLogger.setType(INFO_LOG_TYPE.OTP);
 
         infoLogger.setMessage(message+" ");
-        CustomerInfoLoggerRepository.save(infoLogger);
+        customerInfoLoggerRepository.save(infoLogger);
         emailService.sendVerificationOtpEmail(email, otp, subject, text);
     }
 
     @Transactional
     public String createUser(SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
-        long userCount = CustomerRepository.countUserByEmail(req.getEmail());
+        long userCount = customerRepository.countUserByEmail(req.getEmail());
         if(userCount>0){
-            Customer findConfirmedUser = CustomerRepository.findByEmail(req.getEmail());
+            Customer findConfirmedUser = customerRepository.findByEmail(req.getEmail());
             Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
             if(jwtBlackListCount>0) throw new BadRequestException(
                     findConfirmedUser.getFullName()+", You are blackListed. Contact Support For Remove As BlackList"+findConfirmedUser.getRole()+"!"
@@ -107,7 +107,7 @@ public class CustomerAuthService {
             throw new BadRequestException("Wrong Otp");
         }
 
-        long user = CustomerRepository.countUserByEmail(req.getEmail());
+        long user = customerRepository.countUserByEmail(req.getEmail());
         if (user==0) {
             Customer createdUser = new Customer();
             createdUser.setFullName(req.getFullName());
@@ -116,12 +116,12 @@ public class CustomerAuthService {
             createdUser.setPassword(passwordEncoder.encode(req.getOtp()));
             createdUser.setMobile("9800098000");
             createdUser.setTireCode(TIRE_CODE.TIRE4);
-            CustomerRepository.save(createdUser);
+            customerRepository.save(createdUser);
         } else {
             throw new BadRequestException("User already exists");
         }
 
-        Customer createdUser = CustomerRepository.findByEmail(req.getEmail());
+        Customer createdUser = customerRepository.findByEmail(req.getEmail());
 
         String jwtToken = jwtProvider.generateToken(createdUser.getId(), createdUser.getEmail(), createdUser.getRole());
 
@@ -143,18 +143,47 @@ public class CustomerAuthService {
         userDevice.setDeviceType(httpRequest.getHeader("User-Agent"));
         userDevice.setOperatingSystem("Unknown");
 
-        CustomerLogsRepository.save(userDevice);
+        customerLogsRepository.save(userDevice);
 
         return jwtToken;
     }
 
+    public String addAddress(AddAddressRequest addAddressRequest, HttpServletRequest httpServletRequest, Customer customer) throws BadRequestException{
+        long userCount = customerRepository.countUserByEmail(customer.getEmail());
+        if(userCount>0){
+            Customer findConfirmedUser = customerRepository.findByEmail(customer.getEmail());
+            Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
+            if(jwtBlackListCount>0) throw new BadRequestException(
+                    findConfirmedUser.getFullName()+", You are blackListed. Contact Support For Remove As BlackList"+findConfirmedUser.getRole()+"!"
+            );
+        }
+
+        CustomerAddress customerAddress = new CustomerAddress();
+        customerAddress.setHomeFlatNumber(addAddressRequest.getHomeFlatNumber());
+        customerAddress.setLocality(addAddressRequest.getLocality());
+        customerAddress.setAddress(addAddressRequest.getAddress());
+        customerAddress.setCity(addAddressRequest.getCity());
+        customerAddress.setState(addAddressRequest.getState());
+        customerAddress.setPinCode(addAddressRequest.getPinCode());
+        customerAddress.setMobile(addAddressRequest.getMobile());
+        customerAddress.setCustomer(customer);
+        customerAddressRepository.save(customerAddress);
+
+        Set<CustomerAddress> userAddresses = customer.getUserAddresses();
+        userAddresses.add(customerAddress);
+        customer.setUserAddresses(userAddresses);
+
+        customerRepository.save(customer);
+
+        return jwtProvider.generateToken(customer.getId(), customer.getEmail(), customer.getRole());
+    }
 
 
     public AuthResponse signIn(LoginRequest req, HttpServletRequest httpRequest) throws BadRequestException {
 
-        long userCount = CustomerRepository.countUserByEmail(req.getEmail());
+        long userCount = customerRepository.countUserByEmail(req.getEmail());
         if(userCount>0){
-            Customer findConfirmedUser = CustomerRepository.findByEmail(req.getEmail());
+            Customer findConfirmedUser = customerRepository.findByEmail(req.getEmail());
             Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
             if(jwtBlackListCount>0) throw new BadRequestException(
                     findConfirmedUser.getFullName()+", You are blackListed. Contact Support For Remove As BlackList"+findConfirmedUser.getRole()+"!"
@@ -164,7 +193,7 @@ public class CustomerAuthService {
         String email = req.getEmail();
         String otp = req.getOtp();
 
-        Customer foundUser = CustomerRepository.findByEmail(req.getEmail());
+        Customer foundUser = customerRepository.findByEmail(req.getEmail());
         String ipAddress = httpRequest.getHeader("X-Forwarded-For");
         if (ipAddress == null || ipAddress.isEmpty()) {
             ipAddress = httpRequest.getRemoteAddr();
@@ -183,14 +212,14 @@ public class CustomerAuthService {
         userDevice.setJwtToken(token);
         userDevice.setDeviceType(httpRequest.getHeader("User-Agent"));
         userDevice.setOperatingSystem("Unknown");
-        CustomerLogsRepository.save(userDevice);
+        customerLogsRepository.save(userDevice);
 
         System.out.println(email + " ----- " + otp);
 
-        int findTotalLoggedInDevices = CustomerLogsRepository.findCountByEmail(foundUser.getEmail());
+        int findTotalLoggedInDevices = customerLogsRepository.findCountByEmail(foundUser.getEmail());
 
         if(findTotalLoggedInDevices > KeywordsAndConstants.MAXIMUM_DEVICE_CAN_CONNECT){
-            CustomerLogsRepository.deleteAllByEmailAndLastCreated(foundUser.getEmail());
+            customerLogsRepository.deleteAllByEmailAndLastCreated(foundUser.getEmail());
             authResponse.setMessage("Login Success But Logged Out From Most Last Logged In Device");
         }else{
             authResponse.setMessage("Login Success");

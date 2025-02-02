@@ -44,7 +44,7 @@ public class Customer extends SuperEntity {
     private TIRE_CODE tireCode;
 
     @OneToMany(mappedBy = "customer", cascade = CascadeType.PERSIST, orphanRemoval = true)
-    private List<UserLogs> devices = new ArrayList<>();
+    private List<CustomerLogs> devices = new ArrayList<>();
 
     @OneToMany
     private Set<CustomerAddress> userAddresses=new HashSet<>();
@@ -56,4 +56,7 @@ public class Customer extends SuperEntity {
             inverseJoinColumns = @JoinColumn(name = "coupon_id")
     )
     private Set<Coupon> usedCoupons=new HashSet<>();
+
+    @Column
+    private Boolean isPrimeMember = false;
 }
