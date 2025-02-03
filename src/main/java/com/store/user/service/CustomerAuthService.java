@@ -142,7 +142,6 @@ public class CustomerAuthService {
                 throw new BadRequestException("Failed to create user in Authentication Microservice");
             }
 
-            // Create & Save Customer first, then flush to ensure it's persisted
             Customer createdUser = new Customer();
             createdUser.setFullName(req.getFullName());
             createdUser.setEmail(req.getEmail());
@@ -150,9 +149,8 @@ public class CustomerAuthService {
             createdUser.setPassword(passwordEncoder.encode(req.getOtp()));
             createdUser.setTireCode(TIRE_CODE.TIRE4);
             createdUser = customerRepository.save(createdUser);
-            customerRepository.flush(); // Ensure Hibernate persists the Customer
+            customerRepository.flush();
 
-            // Now associate the saved Customer with VerificationCode
             verificationCode.get(0).setCustomer(createdUser);
             verificationCodeRepository.save(verificationCode.get(0));
 
