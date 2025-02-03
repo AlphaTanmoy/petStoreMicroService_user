@@ -13,19 +13,19 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomerService {
 
-    private CustomerRepository CustomerRepository;
+    private CustomerRepository customerRepository;
 
     @Autowired
-    public void CustomerRepository(CustomerRepository CustomerRepository) throws BadRequestException{
-        this.CustomerRepository = CustomerRepository;
+    public void CustomerRepository(CustomerRepository customerRepository) throws BadRequestException{
+        this.customerRepository = customerRepository;
     }
 
     public Optional<Customer> findCustomerById(String id) throws BadRequestException {
-        return CustomerRepository.findById(id);
+        return customerRepository.findById(id);
     }
 
     public Customer findCustomerByEmail(String email) throws BadRequestException{
-        Customer findCustomer = CustomerRepository.findByEmail(email);
+        Customer findCustomer = customerRepository.findByEmail(email);
         BadRequestException badRequestException = new BadRequestException();
         badRequestException.setErrorMessage("Customer with " + email + " does not exist");
         if(findCustomer==null) throw badRequestException;
@@ -33,6 +33,6 @@ public class CustomerService {
     }
 
     public void saveCustomer(Customer Customer){
-        CustomerRepository.save(Customer);
+        customerRepository.save(Customer);
     }
 }

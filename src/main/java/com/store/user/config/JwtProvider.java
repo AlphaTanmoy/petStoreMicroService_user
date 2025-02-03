@@ -3,8 +3,8 @@ package com.store.user.config;
 import com.store.user.enums.TIRE_CODE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
-import com.store.user.model.User;
-import com.store.user.repo.UserRepository;
+import com.store.user.model.Customer;
+import com.store.user.repo.CustomerRepository;
 import com.store.user.utils.EncryptionUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Service
 public class JwtProvider {
 
-	private UserRepository userRepository;
+	private CustomerRepository customerRepository;
 	private final SecretKey key=Keys.hmacShaKeyFor(KeywordsAndConstants.SECRET_KEY.getBytes());
 	
 	public String generateToken(String id, String email, USER_ROLE role) {
@@ -54,12 +54,12 @@ public class JwtProvider {
 		
 	}
 
-	private String fetchUserIdByEmail(String email) {
-		Optional<User> userOptional = Optional.ofNullable(userRepository.findByEmail(email));
-		if (userOptional.isPresent()) {
-			return String.valueOf(userOptional.get().getId());
+	private String fetchCustomerIdByEmail(String email) {
+		Optional<Customer> customerOptional = Optional.ofNullable(customerRepository.findByEmail(email));
+		if (customerOptional.isPresent()) {
+			return String.valueOf(customerOptional.get().getId());
 		}
-		throw new UsernameNotFoundException("User not found with email: " + email);
+		throw new UsernameNotFoundException("Customer not found with email: " + email);
 	}
 	
 	public String getEmailFromJwtToken(String jwt) {

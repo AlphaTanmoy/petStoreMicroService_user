@@ -35,8 +35,8 @@ public class JWTBlackListController {
             badRequestException.setErrorMessage("Invalid token");
             throw badRequestException;
         }
-        ValidateForUUID.check(actionTakerId, "User");
-        ValidateForUUID.check(jwtBlackListRequest.getActionTakenForId(), "User");
+        ValidateForUUID.check(actionTakerId, "Customer");
+        ValidateForUUID.check(jwtBlackListRequest.getActionTakenForId(), "Customer");
 
         return jwtBlackListService.jwtBlackListOperator(jwtBlackListRequest, actionTakerId, true);
 
@@ -57,18 +57,18 @@ public class JWTBlackListController {
             badRequestException.setErrorMessage("Invalid token");
             throw badRequestException;
         }
-        ValidateForUUID.check(actionTakerId, "User");
-        ValidateForUUID.check(jwtBlackListRequest.getActionTakenForId(), "User");
+        ValidateForUUID.check(actionTakerId, "Customer");
+        ValidateForUUID.check(jwtBlackListRequest.getActionTakenForId(), "Customer");
 
         return jwtBlackListService.jwtBlackListOperator(jwtBlackListRequest, actionTakerId, false);
 
     }
 
-    @PostMapping("/findBlackListedUser/{userId}")
+    @PostMapping("/findBlackListedCustomer/{customerId}")
     public boolean isBlackListedUser(
-            @PathVariable String userId
+            @PathVariable String customerId
     ){
-        boolean isBlackListed = jwtBlackListService.findBlackListedUserById(userId);
+        boolean isBlackListed = jwtBlackListService.findBlackListedUserById(customerId);
         return isBlackListed;
     }
 

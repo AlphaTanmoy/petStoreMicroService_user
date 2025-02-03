@@ -18,7 +18,7 @@ import java.util.Optional;
 public class JWTBlackListService {
 
     private final JWTBlackListRepositoryCustomer jwtBlackListRepository;
-    private final CustomerService userService;
+    private final CustomerService customerService;
 
 
     public boolean findBlackListedUserById(String userId){
@@ -32,7 +32,7 @@ public class JWTBlackListService {
         JWTBlackListResponse jwtBlackListResponse = new JWTBlackListResponse();
         BadRequestException badRequestException = new BadRequestException();
 
-        Optional<Customer> actionTaker = userService.findCustomerById(actionTakerId);
+        Optional<Customer> actionTaker = customerService.findCustomerById(actionTakerId);
         USER_ROLE adminOrMasterConfirmation = actionTaker.get().getRole();
 
         if(adminOrMasterConfirmation.toString().equals(USER_ROLE.ROLE_ADMIN.toString())
@@ -40,7 +40,7 @@ public class JWTBlackListService {
             badRequestException.setErrorMessage("Only Admin and Master Users can have this access! ");
         }
 
-        Optional<Customer> foundUser = userService.findCustomerById(jwtBlackListRequest.getActionTakenForId());
+        Optional<Customer> foundUser = customerService.findCustomerById(jwtBlackListRequest.getActionTakenForId());
         if(foundUser.isEmpty()){
             badRequestException.setErrorMessage("User not found");
             throw badRequestException;
@@ -58,7 +58,7 @@ public class JWTBlackListService {
             throw badRequestException;
         }else{
             foundUser.get().setDATASTATUS(DATA_STATUS.INACTIVE);
-            userService.saveCustomer(foundUser.get());
+            customerService.saveCustomer(foundUser.get());
         }
 
         if(addToJwtBlackList) {

@@ -29,12 +29,12 @@ public class AuthController {
 
     private final CustomerAuthService authService;
     private final JwtProvider jwtProvider;
-    private final CustomerService userService;
+    private final CustomerService customerService;
 
     @PostMapping("/signUp")
-    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
+    public ResponseEntity<AuthResponse> createCustomerHandler(@RequestBody SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
 
-        String jwt=authService.createUser(req, httpRequest);
+        String jwt=authService.createCustomer(req, httpRequest);
 
         AuthResponse res=new AuthResponse();
         res.setJwt(jwt);
@@ -75,13 +75,13 @@ public class AuthController {
         }
 
         String actionTakerId = jwtProvider.getIdFromJwtToken(token);
-        Optional<Customer> findUser = userService.findCustomerById(actionTakerId);
+        Optional<Customer> findCustomer = customerService.findCustomerById(actionTakerId);
         GetProfile getProfile = new GetProfile();
 
-        if(findUser.isPresent()){
-            getProfile.setName(findUser.get().getFullName());
-            getProfile.setUserRole(findUser.get().getRole());
-            getProfile.setTireCode(findUser.get().getTireCode());
+        if(findCustomer.isPresent()){
+            getProfile.setName(findCustomer.get().getFullName());
+            getProfile.setUserRole(findCustomer.get().getRole());
+            getProfile.setTireCode(findCustomer.get().getTireCode());
         }
         else{
             badRequestException.setErrorMessage("No User Data Found");

@@ -28,8 +28,8 @@ public class EmailService {
             emailMessage.setMessage(text);
 
             rabbitTemplate.convertAndSend(
-                    KeywordsAndConstants.RABBIT_MQ_EXCHANGE,
-                    KeywordsAndConstants.RABBIT_MQ_ROUTE_KEY_FOR_LOGIN_OR_SIGNUP_OTP,
+                    KeywordsAndConstants.RABBIT_MQ_EXCHANGE_USER,
+                    KeywordsAndConstants.RABBIT_MQ_ROUTE_KEY_FOR_LOGIN_OR_SIGNUP_OTP_USER,
                     emailMessage
             );
         } catch (Exception e) {

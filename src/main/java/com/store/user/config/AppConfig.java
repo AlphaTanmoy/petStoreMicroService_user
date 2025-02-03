@@ -1,6 +1,5 @@
 package com.store.user.config;
 
-import com.store.user.config.JwtTokenValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

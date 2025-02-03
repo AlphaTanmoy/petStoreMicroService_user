@@ -1,6 +1,5 @@
 package com.store.user.config;
 
-import com.store.user.config.KeywordsAndConstants;
 import com.store.user.utils.EncryptionUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

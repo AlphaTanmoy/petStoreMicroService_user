@@ -1,6 +1,7 @@
 package com.store.user.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.store.user.enums.MICROSERVICE;
 import com.store.user.model.superEntity.SuperEntity;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -9,7 +10,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
-@Table(name = "user_logs")
+@Table(name = "customer_logs")
 public class CustomerLogs extends SuperEntity {
 
     @ManyToOne
@@ -28,4 +29,5 @@ public class CustomerLogs extends SuperEntity {
 
     private String deviceType;
     private String operatingSystem;
+    private MICROSERVICE microserviceName;
 }

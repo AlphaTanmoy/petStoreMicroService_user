@@ -3,6 +3,7 @@ package com.store.user.service;
 import com.store.user.config.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.INFO_LOG_TYPE;
+import com.store.user.enums.MICROSERVICE;
 import com.store.user.enums.TIRE_CODE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
@@ -12,6 +13,8 @@ import com.store.user.request.AddAddressRequest;
 import com.store.user.request.LoginRequest;
 import com.store.user.request.SignUpRequest;
 import com.store.user.response.AuthResponse;
+import com.store.user.response.GetDeviceDetails;
+import com.store.user.utils.DeviceUtils;
 import com.store.user.utils.OtpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -45,6 +48,7 @@ public class CustomerAuthService {
     private final CustomerInfoLoggerRepository customerInfoLoggerRepository;
     private final JWTBlackListRepositoryCustomer JWTBlackListRepositoryCustomer;
     private final CustomerAddressRepository customerAddressRepository;
+    private final DeviceUtils deviceUtils;
 
     public void sentLoginOtp(String email) throws BadRequestException {
 
@@ -91,15 +95,13 @@ public class CustomerAuthService {
     }
 
     @Transactional
-    public String createUser(SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
-        long userCount = customerRepository.countUserByEmail(req.getEmail());
-        if(userCount>0){
-            Customer findConfirmedUser = customerRepository.findByEmail(req.getEmail());
-            Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
-            if(jwtBlackListCount>0) throw new BadRequestException(
-                    findConfirmedUser.getFullName()+", You are blackListed. Contact Support For Remove As BlackList"+findConfirmedUser.getRole()+"!"
-            );
-        }
+    public String createCustomer(SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
+        Customer findConfirmedUser = customerRepository.findByEmail(req.getEmail());
+        if (!findConfirmedUser.getId().isEmpty()) return null;
+        Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
+        if (jwtBlackListCount > 0) throw new BadRequestException(
+                findConfirmedUser.getFullName() + ", You are blackListed. Contact Support For Remove As BlackList" + findConfirmedUser.getRole() + "!"
+        );
 
         List<VerificationCode> verificationCode = verificationCodeRepository.findByEmail(req.getEmail());
 
@@ -107,21 +109,13 @@ public class CustomerAuthService {
             throw new BadRequestException("Wrong Otp");
         }
 
-        long user = customerRepository.countUserByEmail(req.getEmail());
-        if (user==0) {
-            Customer createdUser = new Customer();
-            createdUser.setFullName(req.getFullName());
-            createdUser.setEmail(req.getEmail());
-            createdUser.setRole(USER_ROLE.ROLE_CUSTOMER);
-            createdUser.setPassword(passwordEncoder.encode(req.getOtp()));
-            createdUser.setMobile("9800098000");
-            createdUser.setTireCode(TIRE_CODE.TIRE4);
-            customerRepository.save(createdUser);
-        } else {
-            throw new BadRequestException("User already exists");
-        }
-
-        Customer createdUser = customerRepository.findByEmail(req.getEmail());
+        Customer createdUser = new Customer();
+        createdUser.setFullName(req.getFullName());
+        createdUser.setEmail(req.getEmail());
+        createdUser.setRole(USER_ROLE.ROLE_CUSTOMER);
+        createdUser.setPassword(passwordEncoder.encode(req.getOtp()));
+        createdUser.setTireCode(TIRE_CODE.TIRE4);
+        customerRepository.save(createdUser);
 
         String jwtToken = jwtProvider.generateToken(createdUser.getId(), createdUser.getEmail(), createdUser.getRole());
 
@@ -130,20 +124,19 @@ public class CustomerAuthService {
             ipAddress = httpRequest.getRemoteAddr();
         }
 
-        String deviceId = UUID.randomUUID().toString();
-
         verificationCode.get(0).setCustomer(createdUser);
         verificationCodeRepository.save(verificationCode.get(0));
 
-        CustomerLogs userDevice = new CustomerLogs();
-        userDevice.setCustomer(createdUser);
-        userDevice.setIpAddress(ipAddress);
-        userDevice.setDeviceId(deviceId);
-        userDevice.setJwtToken(jwtToken);
-        userDevice.setDeviceType(httpRequest.getHeader("User-Agent"));
-        userDevice.setOperatingSystem("Unknown");
+        GetDeviceDetails deviceDetails = deviceUtils.findDeviceDetails(httpRequest.getHeader("User-Agent"));
 
-        customerLogsRepository.save(userDevice);
+        CustomerLogs userLogs = new CustomerLogs();
+        userLogs.setCustomer(createdUser);
+        userLogs.setIpAddress(ipAddress);
+        userLogs.setJwtToken(jwtToken);
+        userLogs.setDeviceType(deviceDetails.getDeviceType());
+        userLogs.setOperatingSystem(deviceDetails.getOperatingSystem());
+        userLogs.setMicroserviceName(MICROSERVICE.USER);
+        customerLogsRepository.save(userLogs);
 
         return jwtToken;
     }
@@ -158,15 +151,7 @@ public class CustomerAuthService {
             );
         }
 
-        CustomerAddress customerAddress = new CustomerAddress();
-        customerAddress.setHomeFlatNumber(addAddressRequest.getHomeFlatNumber());
-        customerAddress.setLocality(addAddressRequest.getLocality());
-        customerAddress.setAddress(addAddressRequest.getAddress());
-        customerAddress.setCity(addAddressRequest.getCity());
-        customerAddress.setState(addAddressRequest.getState());
-        customerAddress.setPinCode(addAddressRequest.getPinCode());
-        customerAddress.setMobile(addAddressRequest.getMobile());
-        customerAddress.setCustomer(customer);
+        CustomerAddress customerAddress = getCustomerAddress(addAddressRequest, customer);
         customerAddressRepository.save(customerAddress);
 
         Set<CustomerAddress> userAddresses = customer.getUserAddresses();
@@ -177,7 +162,6 @@ public class CustomerAuthService {
 
         return jwtProvider.generateToken(customer.getId(), customer.getEmail(), customer.getRole());
     }
-
 
     public AuthResponse signIn(LoginRequest req, HttpServletRequest httpRequest) throws BadRequestException {
 
@@ -205,14 +189,14 @@ public class CustomerAuthService {
         AuthResponse authResponse = new AuthResponse();
 
         String deviceId = UUID.randomUUID().toString();
-        CustomerLogs userDevice = new CustomerLogs();
-        userDevice.setCustomer(foundUser);
-        userDevice.setIpAddress(ipAddress);
-        userDevice.setDeviceId(deviceId);
-        userDevice.setJwtToken(token);
-        userDevice.setDeviceType(httpRequest.getHeader("User-Agent"));
-        userDevice.setOperatingSystem("Unknown");
-        customerLogsRepository.save(userDevice);
+        CustomerLogs customerLogs = new CustomerLogs();
+        customerLogs.setCustomer(foundUser);
+        customerLogs.setIpAddress(ipAddress);
+        customerLogs.setDeviceId(deviceId);
+        customerLogs.setJwtToken(token);
+        customerLogs.setDeviceType(httpRequest.getHeader("User-Agent"));
+        customerLogs.setOperatingSystem("Unknown");
+        customerLogsRepository.save(customerLogs);
 
         System.out.println(email + " ----- " + otp);
 
@@ -253,5 +237,18 @@ public class CustomerAuthService {
             throw new BadRequestException("OTP expired...");
         }
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+    }
+
+    private static CustomerAddress getCustomerAddress(AddAddressRequest addAddressRequest, Customer customer) {
+        CustomerAddress customerAddress = new CustomerAddress();
+        customerAddress.setHomeFlatNumber(addAddressRequest.getHomeFlatNumber());
+        customerAddress.setLocality(addAddressRequest.getLocality());
+        customerAddress.setAddress(addAddressRequest.getAddress());
+        customerAddress.setCity(addAddressRequest.getCity());
+        customerAddress.setState(addAddressRequest.getState());
+        customerAddress.setPinCode(addAddressRequest.getPinCode());
+        customerAddress.setMobile(addAddressRequest.getMobile());
+        customerAddress.setCustomer(customer);
+        return customerAddress;
     }
 }
