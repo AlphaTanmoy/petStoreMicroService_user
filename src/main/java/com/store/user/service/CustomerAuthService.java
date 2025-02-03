@@ -15,10 +15,12 @@ import com.store.user.request.SignUpRequest;
 import com.store.user.response.AuthResponse;
 import com.store.user.response.GetDeviceDetails;
 import com.store.user.utils.DeviceUtils;
+import com.store.user.utils.GenerateUUID;
 import com.store.user.utils.OtpUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,12 +29,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import static com.store.user.config.KeywordsAndConstants.AUTH_MICROSERVICE_BASE_URL_LOC;
 
 @Service
 @RequiredArgsConstructor
@@ -95,51 +96,91 @@ public class CustomerAuthService {
     }
 
     @Transactional
-    public String createCustomer(SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
+    public String createCustomer(SignUpRequest req, HttpServletRequest httpRequest, MICROSERVICE microservice) throws BadRequestException {
         Customer findConfirmedUser = customerRepository.findByEmail(req.getEmail());
-        if (!findConfirmedUser.getId().isEmpty()) return null;
-        Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
-        if (jwtBlackListCount > 0) throw new BadRequestException(
-                findConfirmedUser.getFullName() + ", You are blackListed. Contact Support For Remove As BlackList" + findConfirmedUser.getRole() + "!"
-        );
+
+        if (findConfirmedUser != null && !findConfirmedUser.getId().isEmpty()) {
+            return null;
+        }
+
+        if (findConfirmedUser != null) {
+            Long jwtBlackListCount = JWTBlackListRepositoryCustomer.findByUserId(findConfirmedUser.getId());
+            if (jwtBlackListCount > 0) {
+                throw new BadRequestException(
+                        findConfirmedUser.getFullName() + ", You are blackListed. Contact Support For Remove As BlackList" + findConfirmedUser.getRole() + "!"
+                );
+            }
+        }
 
         List<VerificationCode> verificationCode = verificationCodeRepository.findByEmail(req.getEmail());
-
-        if (verificationCode == null || !verificationCode.get(0).getOtp().equals(req.getOtp())) {
-            throw new BadRequestException("Wrong Otp");
+        if (verificationCode.isEmpty()) {
+            throw new BadRequestException("No verification code found for this email");
         }
 
-        Customer createdUser = new Customer();
-        createdUser.setFullName(req.getFullName());
-        createdUser.setEmail(req.getEmail());
-        createdUser.setRole(USER_ROLE.ROLE_CUSTOMER);
-        createdUser.setPassword(passwordEncoder.encode(req.getOtp()));
-        createdUser.setTireCode(TIRE_CODE.TIRE4);
-        customerRepository.save(createdUser);
-
-        String jwtToken = jwtProvider.generateToken(createdUser.getId(), createdUser.getEmail(), createdUser.getRole());
-
-        String ipAddress = httpRequest.getHeader("X-Forwarded-For");
-        if (ipAddress == null || ipAddress.isEmpty()) {
-            ipAddress = httpRequest.getRemoteAddr();
+        if (!verificationCode.get(0).getOtp().equals(req.getOtp())) {
+            throw new BadRequestException("Wrong OTP");
         }
 
-        verificationCode.get(0).setCustomer(createdUser);
-        verificationCodeRepository.save(verificationCode.get(0));
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            String authServiceUrl = AUTH_MICROSERVICE_BASE_URL_LOC + "/signUp";
 
-        GetDeviceDetails deviceDetails = deviceUtils.findDeviceDetails(httpRequest.getHeader("User-Agent"));
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
 
-        CustomerLogs userLogs = new CustomerLogs();
-        userLogs.setCustomer(createdUser);
-        userLogs.setIpAddress(ipAddress);
-        userLogs.setJwtToken(jwtToken);
-        userLogs.setDeviceType(deviceDetails.getDeviceType());
-        userLogs.setOperatingSystem(deviceDetails.getOperatingSystem());
-        userLogs.setMicroserviceName(MICROSERVICE.USER);
-        customerLogsRepository.save(userLogs);
+            Map<String, Object> authRequestBody = new HashMap<>();
+            authRequestBody.put("fullName", req.getFullName());
+            authRequestBody.put("email", req.getEmail());
+            authRequestBody.put("otp", verificationCode.get(0).getOtp());
+            authRequestBody.put("mobileNumber", req.getMobileNumber());
+            authRequestBody.put("microServiceName", microservice);
 
-        return jwtToken;
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(authRequestBody, headers);
+            ResponseEntity<String> authResponse = restTemplate.postForEntity(authServiceUrl, entity, String.class);
+
+            if (authResponse.getStatusCode() != HttpStatus.OK) {
+                throw new BadRequestException("Failed to create user in Authentication Microservice");
+            }
+
+            // Create & Save Customer first, then flush to ensure it's persisted
+            Customer createdUser = new Customer();
+            createdUser.setFullName(req.getFullName());
+            createdUser.setEmail(req.getEmail());
+            createdUser.setRole(USER_ROLE.ROLE_CUSTOMER);
+            createdUser.setPassword(passwordEncoder.encode(req.getOtp()));
+            createdUser.setTireCode(TIRE_CODE.TIRE4);
+            createdUser = customerRepository.save(createdUser);
+            customerRepository.flush(); // Ensure Hibernate persists the Customer
+
+            // Now associate the saved Customer with VerificationCode
+            verificationCode.get(0).setCustomer(createdUser);
+            verificationCodeRepository.save(verificationCode.get(0));
+
+            String jwtToken = jwtProvider.generateToken(createdUser.getId(), createdUser.getEmail(), createdUser.getRole());
+
+            String ipAddress = httpRequest.getHeader("X-Forwarded-For");
+            if (ipAddress == null || ipAddress.isEmpty()) {
+                ipAddress = httpRequest.getRemoteAddr();
+            }
+
+            GetDeviceDetails deviceDetails = deviceUtils.findDeviceDetails(httpRequest.getHeader("User-Agent"));
+
+            CustomerLogs userLogs = new CustomerLogs();
+            userLogs.setCustomer(createdUser);
+            userLogs.setIpAddress(ipAddress);
+            userLogs.setJwtToken(jwtToken);
+            userLogs.setDeviceId(GenerateUUID.generateShortUUID());
+            userLogs.setDeviceType(deviceDetails.getDeviceType());
+            userLogs.setOperatingSystem(deviceDetails.getOperatingSystem());
+            userLogs.setMicroserviceName(MICROSERVICE.USER);
+            customerLogsRepository.save(userLogs);
+
+            return jwtToken;
+        } catch (Exception e) {
+            throw new BadRequestException("Authentication Microservice Response Error");
+        }
     }
+
 
     public String addAddress(AddAddressRequest addAddressRequest, HttpServletRequest httpServletRequest, Customer customer) throws BadRequestException{
         long userCount = customerRepository.countUserByEmail(customer.getEmail());

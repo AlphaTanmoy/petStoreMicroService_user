@@ -10,7 +10,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
     Customer findByEmail(String email);
 
     @Query(
-            value = "SELECT COUNT(*) FROM users u WHERE u.email = :email"
+            value = "SELECT COUNT(*) FROM customer c WHERE c.email = :email"
             , nativeQuery = true
     )
     Long countUserByEmail(@Param("email") String email);

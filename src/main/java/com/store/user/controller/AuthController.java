@@ -2,6 +2,7 @@ package com.store.user.controller;
 
 import com.store.user.config.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
+import com.store.user.enums.MICROSERVICE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
 import com.store.user.model.Customer;
@@ -34,7 +35,7 @@ public class AuthController {
     @PostMapping("/signUp")
     public ResponseEntity<AuthResponse> createCustomerHandler(@RequestBody SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
 
-        String jwt=authService.createCustomer(req, httpRequest);
+        String jwt=authService.createCustomer(req, httpRequest, MICROSERVICE.USER);
 
         AuthResponse res=new AuthResponse();
         res.setJwt(jwt);
