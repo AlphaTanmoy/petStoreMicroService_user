@@ -1,7 +1,7 @@
 package com.store.user.scheduler;
 
 import com.store.user.model.VerificationCode;
-import com.store.user.repo.InfoLoggerRepository;
+import com.store.user.repo.CustomerInfoLoggerRepository;
 import com.store.user.repo.VerificationCodeRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,17 +13,14 @@ import java.util.List;
 public class ScheduleMaster{
 
     private final VerificationCodeRepository verificationCodeRepository;
-    private final InfoLoggerRepository infoLoggerRepository;
-    private final ApiKeyService apiKeyService;
+    private final CustomerInfoLoggerRepository customerInfoLoggerRepository;
 
     public ScheduleMaster(
             VerificationCodeRepository verificationCodeRepository,
-            InfoLoggerRepository infoLoggerRepository,
-            ApiKeyService apiKeyService
+            CustomerInfoLoggerRepository customerInfoLoggerRepository
     ) {
         this.verificationCodeRepository = verificationCodeRepository;
-        this.infoLoggerRepository = infoLoggerRepository;
-        this.apiKeyService = apiKeyService;
+        this.customerInfoLoggerRepository = customerInfoLoggerRepository;
     }
 
     @Scheduled(cron = "0 * * * * ?") // every 1 mint
@@ -38,7 +35,6 @@ public class ScheduleMaster{
 
     @Scheduled(cron = "0 0 0 * * ?")  // This runs every day at midnight
     public void remove24HoursLog() {
-        infoLoggerRepository.deleteAll();
-        apiKeyService.deleteApiKeyIfExpired();
+        customerInfoLoggerRepository.deleteAll();
     }
 }
