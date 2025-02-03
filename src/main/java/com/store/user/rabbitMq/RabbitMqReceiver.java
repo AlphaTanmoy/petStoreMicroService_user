@@ -17,7 +17,7 @@ public class RabbitMqReceiver {
     private JavaMailSender javaMailSender;
 
     @RabbitListener(
-            queues = "#{(T(com.store.authentication.config.KeywordsAndConstants).RABBIT_MQ_QUEUE_FOR_LOGIN_OR_SIGNUP_OTP_USER)}",
+            queues = "#{(T(com.store.user.config.KeywordsAndConstants).RABBIT_MQ_QUEUE_FOR_LOGIN_OR_SIGNUP_OTP_USER)}",
             concurrency = "1"
     )
     public void processEmail(RabbitMqRequestForOtpDeliver rabbitMqRequestForOtpDeliver) {

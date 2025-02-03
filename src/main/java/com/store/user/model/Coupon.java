@@ -13,6 +13,7 @@ import java.util.Set;
 @Getter
 @Setter
 @NoArgsConstructor
+@Table(name = "coupon")
 public class Coupon extends SuperEntity {
 
     @Column(unique = true, nullable = false)
