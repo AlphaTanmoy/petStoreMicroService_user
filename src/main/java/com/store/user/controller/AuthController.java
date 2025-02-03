@@ -3,17 +3,21 @@ package com.store.user.controller;
 import com.store.user.config.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.MICROSERVICE;
+import com.store.user.enums.RESPONSE_TYPE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
 import com.store.user.model.Customer;
+import com.store.user.model.VerificationCode;
 import com.store.user.request.LoginRequest;
 import com.store.user.request.RequestEmail;
+import com.store.user.request.SaveOtpRequest;
 import com.store.user.request.SignUpRequest;
 import com.store.user.response.ApiResponse;
 import com.store.user.response.AuthResponse;
 import com.store.user.response.GetProfile;
 import com.store.user.service.CustomerAuthService;
 import com.store.user.service.CustomerService;
+import com.store.user.service.VerificationCodeService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +35,14 @@ public class AuthController {
     private final CustomerAuthService authService;
     private final JwtProvider jwtProvider;
     private final CustomerService customerService;
+    private final VerificationCodeService verificationCodeService;
+
+    @PostMapping("/saveOtp/{emailId}")
+    public String SaveOtp(@PathVariable String emailId){
+        RESPONSE_TYPE response = verificationCodeService.saveOtpFromAuthMicroService(emailId);
+        if(response==RESPONSE_TYPE.FAIL) return "fail";
+        else return "success";
+    }
 
     @PostMapping("/signUp")
     public ResponseEntity<AuthResponse> createCustomerHandler(@RequestBody SignUpRequest req, HttpServletRequest httpRequest) throws BadRequestException {
