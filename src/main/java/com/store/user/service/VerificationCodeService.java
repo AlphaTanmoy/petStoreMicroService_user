@@ -6,7 +6,6 @@ import com.store.user.model.Customer;
 import com.store.user.model.VerificationCode;
 import com.store.user.repo.CustomerRepository;
 import com.store.user.repo.VerificationCodeRepository;
-import com.store.user.request.SaveOtpRequest;
 import com.store.user.response.VerificationCodeGrabber;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
