@@ -180,7 +180,7 @@ public class CustomerAuthService {
     }
 
 
-    public String addAddress(AddAddressRequest addAddressRequest, HttpServletRequest httpServletRequest, Customer customer) throws BadRequestException{
+    public String addAddress(AddAddressRequest addAddressRequest, Customer customer) throws BadRequestException{
         long userCount = customerRepository.countUserByEmail(customer.getEmail());
         if(userCount>0){
             Customer findConfirmedUser = customerRepository.findByEmail(customer.getEmail());
