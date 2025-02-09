@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,7 +64,7 @@ public class CustomerService {
             boolean showInActive,
             String userName
     ) throws Exception {
-        ZonedDateTime offsetDateFinal;
+        ZonedDateTime offsetDateFinal = null;
         String offsetId = "";
 
         DATA_STATUS dataStatus = DATA_STATUS.ACTIVE;
@@ -72,7 +73,8 @@ public class CustomerService {
         if (offsetToken != null) {
             String decrypted = EncryptionUtils.decrypt(EncodingUtil.decode(offsetToken));
             String[] splits = decrypted.split("::");
-            Optional<ZonedDateTime> decryptedOffsetDate = dateUtil.getLocalDateTimeFromStringUsingIsoFormatServerTimeZone(splits[0]);
+            Optional<ZonedDateTime> decryptedOffsetDate =
+                    dateUtil.getLocalDateTimeFromStringUsingIsoFormatServerTimeZone(splits[0]);
 
             if (decryptedOffsetDate.isEmpty()) {
                 throw new BadRequestException("Please provide a valid offset token");
@@ -83,36 +85,26 @@ public class CustomerService {
         } else {
             Optional<FetchMostRecentInterface> firstCreated = customerRepository.findTop1ByOrderByCreatedDateDesc();
             if (firstCreated.isEmpty()) {
-                offsetDateFinal = null;
-            } else {
-                FetchMostRecentInterface instant = firstCreated.get();
-                offsetDateFinal = ZonedDateTime.ofInstant(instant.getCreatedDate().plusNanos(1000), ZoneId.of("UTC"));
+                return new PaginationResponse<>(new ArrayList<>(), null, 0L, toRetFilterOption);
             }
-        }
-
-        if (offsetDateFinal == null) {
-            return new PaginationResponse<>(new ArrayList<>(), null, 0L, toRetFilterOption);
+            FetchMostRecentInterface instant = firstCreated.get();
+            offsetDateFinal = ZonedDateTime.ofInstant(instant.getCreatedDate().plusNanos(1000), ZoneId.of("UTC"));
         }
 
         List<GetUsers> toReturnAllUsers = new ArrayList<>();
         long giveCountData = 0;
-        boolean considerFromDate = false;
-        boolean considerToDate = false;
-        if (fromDateFinal != null && toDateFinal != null) {
-            considerFromDate = true;
-            considerToDate = true;
-        }
+
+        boolean considerFromDate = (fromDateFinal != null);
+        boolean considerToDate = (toDateFinal != null);
 
         if (giveCount) {
-            long count = customerRepository.findCountWithOutOffsetIdAndDate(
+            giveCountData = customerRepository.findCountWithOutOffsetIdAndDate(
                     fromDateFinal,
                     considerFromDate,
                     toDateFinal,
                     considerToDate,
                     dataStatus.name()
             );
-
-            giveCountData = count;
         }
 
         if (giveData) {
@@ -158,6 +150,7 @@ public class CustomerService {
                     );
 
                     int nextPageSize = limit - usersNextPageWithSameData.size();
+
                     List<GetUsers> userNextPage = customerRepository.findDataWithOutOffsetId(
                             fromDateFinal,
                             considerFromDate,
@@ -177,34 +170,25 @@ public class CustomerService {
             if (toReturnAllUsers.isEmpty()) {
                 return new PaginationResponse<>(new ArrayList<>(), null, 0L, toRetFilterOption);
             } else {
+                DateTimeFormatter formatter = DateTimeFormatter.ISO_INSTANT;
+                String formattedDate = formatter.format(toReturnAllUsers.get(toReturnAllUsers.size() - 1).getCreatedDate());
+
+                String offsetTokenEncoded = EncodingUtil.encode(
+                        EncryptionUtils.encrypt(
+                                formattedDate + "::" + toReturnAllUsers.get(toReturnAllUsers.size() - 1).getId()
+                        )
+                );
+
                 return new PaginationResponse<>(
                         ConverterStringToObjectList.sanitizeForOutput(toReturnAllUsers, GetUsers.class),
-                        EncodingUtil.encode(
-                                EncryptionUtils.encrypt(
-                                        toReturnAllUsers.get(toReturnAllUsers.size() - 1).getCreatedDate() + "::" +
-                                                toReturnAllUsers.get(toReturnAllUsers.size() - 1).getId()
-                                )
-                        ),
+                        offsetTokenEncoded,
                         giveCountData,
                         toRetFilterOption
                 );
-
             }
         } else {
             return new PaginationResponse<>(new ArrayList<>(), null, 0L, toRetFilterOption);
         }
     }
-
-    private ZonedDateTime findOffsetDateFinal() {
-        Optional<FetchMostRecentInterface> firstCreated = customerRepository.findTop1ByOrderByCreatedDateDesc();
-
-        if (firstCreated.isEmpty()) {
-            return null;
-        }
-
-        FetchMostRecentInterface instant = firstCreated.get();
-        return ZonedDateTime.ofInstant(instant.getCreatedDate().plusNanos(1000), ZoneId.of("UTC"));
-    }
-
 
 }
