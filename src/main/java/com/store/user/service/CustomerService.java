@@ -27,13 +27,11 @@ public class CustomerService {
 
     private DateUtil dateUtil;
     private CustomerRepository customerRepository;
-    private EncryptionUtils encryptionUtils;
 
     @Autowired
     public void CustomerRepository(DateUtil dateUtil, CustomerRepository customerRepository, EncryptionUtils encryptionUtils) throws BadRequestException {
         this.dateUtil = dateUtil;
         this.customerRepository = customerRepository;
-        this.encryptionUtils = encryptionUtils;
     }
 
     public Optional<Customer> findCustomerById(String id) throws BadRequestException {
@@ -72,7 +70,7 @@ public class CustomerService {
         if (showInActive) dataStatus = DATA_STATUS.INACTIVE;
 
         if (offsetToken != null) {
-            String decrypted = encryptionUtils.decryptOffset(EncodingUtil.decode(offsetToken));
+            String decrypted = EncryptionUtils.decrypt(EncodingUtil.decode(offsetToken));
             String[] splits = decrypted.split("::");
             Optional<ZonedDateTime> decryptedOffsetDate = dateUtil.getLocalDateTimeFromStringUsingIsoFormatServerTimeZone(splits[0]);
 
@@ -173,16 +171,14 @@ public class CustomerService {
             if (toReturnAllUsers.isEmpty()) {
                 return new PaginationResponse<>(new ArrayList<>(), null, 0L, toRetFilterOption);
             } else {
-                String offsetTokenEncoded = EncodingUtil.encode(
-                        EncryptionUtils.encrypt(
-                                toReturnAllUsers.get(toReturnAllUsers.size() - 1).getCreatedDate() + "::" +
-                                        toReturnAllUsers.get(toReturnAllUsers.size() - 1).getId()
-                        )
-                );
-
                 return new PaginationResponse<>(
                         ConverterStringToObjectList.sanitizeForOutput(toReturnAllUsers, GetUsers.class),
-                        offsetTokenEncoded,
+                        EncodingUtil.encode(
+                                EncryptionUtils.encrypt(
+                                        toReturnAllUsers.get(toReturnAllUsers.size() - 1).getCreatedDate() + "::" +
+                                                toReturnAllUsers.get(toReturnAllUsers.size() - 1).getId()
+                                )
+                        ),
                         giveCountData,
                         toRetFilterOption
                 );

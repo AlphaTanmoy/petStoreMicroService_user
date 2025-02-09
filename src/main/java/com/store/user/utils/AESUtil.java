@@ -35,6 +35,16 @@ public class AESUtil {
     }
 
     public static IvParameterSpec generateIv() {
-        return new IvParameterSpec(new byte[16]); // Initializes a 16-byte IV (all zeros)
+        return new IvParameterSpec(new byte[16]);
+    }
+
+    public static String encryptPasswordBased(String plainText, SecretKey key, IvParameterSpec iv) {
+        try {
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, key, iv);
+            return Base64.getEncoder().encodeToString(cipher.doFinal(plainText.getBytes()));
+        } catch (Exception e) {
+            throw new RuntimeException("Encryption failed", e);
+        }
     }
 }

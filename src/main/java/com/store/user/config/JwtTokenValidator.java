@@ -29,7 +29,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
         String jwt = request.getHeader(KeywordsAndConstants.JWT_HEADER);
 
         if (jwt != null) {
-            jwt = jwt.substring(7); // Remove "Bearer " prefix
+            jwt = jwt.substring(6); // Remove "Bearer " prefix
 
             try {
                 // Create a signing key

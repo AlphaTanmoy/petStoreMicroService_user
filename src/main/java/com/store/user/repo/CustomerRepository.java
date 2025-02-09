@@ -6,8 +6,6 @@ import com.store.user.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -24,10 +22,11 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
     Long countUserByEmail(@Param("email") String email);
 
     @Query(
-            value = "Select id as id, created_date as createdDate " +
+            value = "SELECT id AS id, created_date AS createdDate " +
                     "FROM customer " +
                     "ORDER BY created_date DESC " +
-                    "LIMIT 1 ", nativeQuery = true
+                    "FETCH FIRST 1 ROW ONLY",
+            nativeQuery = true
     )
     Optional<FetchMostRecentInterface> findTop1ByOrderByCreatedDateDesc();
 
@@ -36,7 +35,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "FROM customer " +
                     "WHERE data_status = :dataStatus " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
-                    "AND (:considerToDate = false OR created_date <= :toDate)"
+                    "AND (:considerToDate = false OR created_date <= :toDate) "
                     , nativeQuery = true
     )
     Long findCountWithOutOffsetIdAndDate(
@@ -44,7 +43,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
             @Param("considerFromDate") Boolean considerFromDate,
             @Param("toDate") ZonedDateTime toDate,
             @Param("considerToDate") Boolean considerToDate,
-            @Param("dataStatus")String dataStatus
+            @Param("dataStatus") String dataStatus
     );
 
     @Query(
@@ -60,7 +59,8 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "WHERE data_status = :dataStatus " +
                     "AND full_name ILIKE CONCAT('%', :userName, '%') " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
-                    "AND (:considerToDate = false OR created_date <= :toDate)"
+                    "AND (:considerToDate = false OR created_date <= :toDate) " +
+                    "ORDER BY created_date DESC"
             , nativeQuery = true
     )
     List<GetUsers> findDataWithOutOffsetIdAndDate(
@@ -87,6 +87,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "AND full_name ILIKE CONCAT('%', :userName, '%') " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
                     "AND (:considerToDate = false OR created_date <= :toDate) " +
+                    "ORDER BY created_date, id DESC " +
                     "LIMIT :limit"
             , nativeQuery = true
     )
@@ -116,7 +117,8 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "AND data_status = :dataStatus " +
                     "AND full_name ILIKE CONCAT('%', :userName, '%') " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
-                    "AND (:considerToDate = false OR created_date <= :toDate)" +
+                    "AND (:considerToDate = false OR created_date <= :toDate) " +
+                    "ORDER BY created_date, id DESC " +
                     "LIMIT :limit"
             , nativeQuery = true
     )

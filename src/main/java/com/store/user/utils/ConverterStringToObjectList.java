@@ -1,58 +1,56 @@
 package com.store.user.utils;
 
-
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.AnnotatedMember;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
+@Component
 public class ConverterStringToObjectList {
 
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = createDefaultMapper();
 
-    static {
-        objectMapper.setTimeZone(TimeZone.getDefault());
-        objectMapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
+    private static ObjectMapper createDefaultMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setTimeZone(TimeZone.getDefault());
+        mapper.registerModule(new JavaTimeModule()); // ✅ Enables Java 8 Date/Time support
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false); // ✅ Ensures ISO-8601 format for dates
+        mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
             @Override
             public boolean hasIgnoreMarker(AnnotatedMember m) {
-                if (m != null && m.hasAnnotation(ConditionalJsonIgnore.class)) {
-                    return false;
-                }
-                return super.hasIgnoreMarker(m);
+                return m != null && m.hasAnnotation(ConditionalJsonIgnore.class) ? false : super.hasIgnoreMarker(m);
             }
         });
-        objectMapper.findAndRegisterModules();
+        return mapper;
     }
 
     public static <T> List<T> getObjectList(String dataToConvert, Class<T> clazz) {
-        if (dataToConvert.isEmpty()) {
+        if (dataToConvert == null || dataToConvert.isEmpty()) {
             return new ArrayList<>();
         }
-
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setTimeZone(TimeZone.getDefault());
-
         try {
-            return mapper.readValue(
+            return objectMapper.readValue(
                     dataToConvert,
-                    mapper.getTypeFactory().constructCollectionType(ArrayList.class, clazz)
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, clazz)
             );
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error converting string to object list: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
     public static <T> T getSingleObject(String dataToConvert, boolean shouldIncludeConditionalJsonIgnores, Class<T> clazz) {
         try {
-            ObjectMapper mapper = createMapper(shouldIncludeConditionalJsonIgnores);
-            return mapper.readValue(dataToConvert, clazz);
+            return createMapper(shouldIncludeConditionalJsonIgnores).readValue(dataToConvert, clazz);
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("Error converting string to single object: " + e.getMessage());
             return null;
         }
     }
@@ -64,42 +62,35 @@ public class ConverterStringToObjectList {
     public static String convertObjectToString(Object objectToConvert, SimpleFilterProvider filter, boolean shouldIncludeConditionalJsonIgnores) {
         try {
             ObjectMapper mapper = createMapper(shouldIncludeConditionalJsonIgnores);
-            return mapper.writer(filter).writeValueAsString(objectToConvert);
-        } catch (Exception e) {
-            e.printStackTrace();
+            return filter != null ? mapper.writer(filter).writeValueAsString(objectToConvert) : mapper.writeValueAsString(objectToConvert);
+        } catch (JsonProcessingException e) {
+            System.err.println("Error converting object to string: " + e.getMessage());
+            return "{}";
         }
-        return "{}";
     }
 
     public static <T> List<T> sanitizeForOutput(Object objectToConvert, Class<T> clazz) {
-        return getObjectList(
-                convertObjectToString(objectToConvert, null, true),
-                clazz
-        );
+        return getObjectList(convertObjectToString(objectToConvert, null, true), clazz);
     }
 
     public static <T> T sanitizeForOutputSingleObject(Object objectToConvert, Class<T> clazz) {
-        return getSingleObject(
-                convertObjectToString(objectToConvert, null, true),
-                false,
-                clazz
-        );
+        return getSingleObject(convertObjectToString(objectToConvert, null, true), false, clazz);
     }
 
     private static ObjectMapper createMapper(boolean shouldIncludeConditionalJsonIgnores) {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setTimeZone(TimeZone.getDefault());
+        mapper.registerModule(new JavaTimeModule());  // ✅ Ensures `Instant` and `LocalDateTime` are handled correctly
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         mapper.setAnnotationIntrospector(new JacksonAnnotationIntrospector() {
             @Override
             public boolean hasIgnoreMarker(AnnotatedMember m) {
-                if (m != null && shouldIncludeConditionalJsonIgnores && m.hasAnnotation(ConditionalJsonIgnore.class)) {
-                    return false;
-                }
-                return super.hasIgnoreMarker(m);
+                return (m == null || !shouldIncludeConditionalJsonIgnores || !m.hasAnnotation(ConditionalJsonIgnore.class)) && super.hasIgnoreMarker(m);
             }
         });
-        return mapper.findAndRegisterModules();
+        return mapper;
     }
 }
+
 
 

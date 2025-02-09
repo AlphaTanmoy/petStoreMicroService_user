@@ -18,7 +18,6 @@ public class KeywordsAndConstants {
     public static final String HEADER_AUTH_TOKEN="Alpha";
     public static final String API_KEY_PREFIX="Alpha-Key-";
     public static final String ALGORITHM = "AES";
-    public static final String UTF_8 = "UTF-8";
     public static final String MESSAGE_DIGEST_ALGORITHM = "SHA-256";
     public static final String SECRET_KEY_FOR_PASSWORD_ENCRYPTION = "ALPHA1JGSkZWa2RTTUdoS1UydDBUVlJWTlZCVlJrWlRWVEZTVmxac1pGbFhWbkJvV1cxT2ExcFhXbTVoUjJ4eFlU";
     public static final Integer GET_PASSWORD_MIN_LENGTH = 8;
