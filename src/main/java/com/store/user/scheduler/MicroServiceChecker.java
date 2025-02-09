@@ -20,252 +20,44 @@ public class MicroServiceChecker {
         this.microserviceCheckLoggerRepository = microserviceCheckLoggerRepository;
     }
 
-    void checkMicroServices(){
-        checkAdmin();
-        checkAuthentication();
-        checkChat();
-        checkCore();
-        checkPayment();
-        checkSeller();
-        checkUser();
+    public void checkMicroServices() {
+        checkService(MICROSERVICE.ADMIN, ADMIN_MICROSERVICE_BASE_URL_LOC + "/preHitter");
+        checkService(MICROSERVICE.AUTHENTICATION, AUTH_MICROSERVICE_BASE_URL_LOC + "/preHitter");
+        checkService(MICROSERVICE.CHAT, CHAT_MICROSERVICE_BASE_URL_LOC + "/preHitter");
+        checkService(MICROSERVICE.CORE, CORE_MICROSERVICE_BASE_URL_LOC + "/preHitter");
+        checkService(MICROSERVICE.PAYMENT, PAYMENT_MICROSERVICE_BASE_URL_LOC + "/preHitter");
+        checkService(MICROSERVICE.SELLER, SELLER_MICROSERVICE_BASE_URL_LOC + "/preHitter");
+        checkService(MICROSERVICE.USER, USER_MICROSERVICE_BASE_URL_LOC + "/preHitter");
     }
 
-    private void checkAdmin(){
-        try{
+    private void checkService(MICROSERVICE microservice, String serviceUrl) {
+        try {
             RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = ADMIN_MICROSERVICE_BASE_URL_LOC + "/preHitter";
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-               Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.ADMIN.name());
-               if(adminMicroService.isPresent()){
-                   adminMicroService.get().setStatus(STATUS.UP);
-                   microserviceCheckLoggerRepository.save(adminMicroService.get());
-               } else {
-                   MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                   newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.ADMIN);
-                   newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                   microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-               }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.ADMIN.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.ADMIN);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
+
+            ResponseEntity<String> response = restTemplate.exchange(serviceUrl, HttpMethod.GET, entity, String.class);
+            STATUS status = (response.getStatusCode() == HttpStatus.OK) ? STATUS.UP : STATUS.DOWN;
+
+            updateMicroserviceStatus(microservice, status);
+        } catch (Exception e) {
+            updateMicroserviceStatus(microservice, STATUS.DOWN);
         }
     }
 
-    private void checkAuthentication(){
-        try{
-            RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = AUTH_MICROSERVICE_BASE_URL_LOC + "/preHitter";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-                Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.AUTHENTICATION.name());
-                if(adminMicroService.isPresent()){
-                    adminMicroService.get().setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(adminMicroService.get());
-                } else {
-                    MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                    newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.AUTHENTICATION);
-                    newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-                }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.AUTHENTICATION.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.AUTHENTICATION);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
+    private void updateMicroserviceStatus(MICROSERVICE microservice, STATUS status) {
+        Optional<MicroserviceCheckLogger> existingMicroservice =
+                microserviceCheckLoggerRepository.findByMicroserviceName(microservice.name());
+
+        if (existingMicroservice.isPresent()) {
+            existingMicroservice.get().setStatus(status);
+            microserviceCheckLoggerRepository.save(existingMicroservice.get());
+        } else {
+            MicroserviceCheckLogger newLogger = new MicroserviceCheckLogger();
+            newLogger.setMicroservice(microservice);
+            newLogger.setStatus(status);
+            microserviceCheckLoggerRepository.save(newLogger);
         }
     }
-
-    private void checkChat(){
-        try{
-            RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = CHAT_MICROSERVICE_BASE_URL_LOC + "/preHitter";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-                Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.CHAT.name());
-                if(adminMicroService.isPresent()){
-                    adminMicroService.get().setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(adminMicroService.get());
-                } else {
-                    MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                    newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.CHAT);
-                    newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-                }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.CHAT.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.CHAT);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
-        }
-    }
-
-    private void checkCore(){
-        try{
-            RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = CORE_MICROSERVICE_BASE_URL_LOC + "/preHitter";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-                Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.CORE.name());
-                if(adminMicroService.isPresent()){
-                    adminMicroService.get().setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(adminMicroService.get());
-                } else {
-                    MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                    newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.CORE);
-                    newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-                }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.CORE.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.CORE);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
-        }
-    }
-
-    private void checkPayment(){
-        try{
-            RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = PAYMENT_MICROSERVICE_BASE_URL_LOC + "/preHitter";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-                Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.PAYMENT.name());
-                if(adminMicroService.isPresent()){
-                    adminMicroService.get().setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(adminMicroService.get());
-                } else {
-                    MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                    newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.PAYMENT);
-                    newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-                }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.PAYMENT.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.PAYMENT);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
-        }
-    }
-
-    private void checkSeller(){
-        try{
-            RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = SELLER_MICROSERVICE_BASE_URL_LOC + "/preHitter";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-                Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.SELLER.name());
-                if(adminMicroService.isPresent()){
-                    adminMicroService.get().setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(adminMicroService.get());
-                } else {
-                    MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                    newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.SELLER);
-                    newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-                }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.SELLER.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.SELLER);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
-        }
-    }
-
-    private void checkUser(){
-        try{
-            RestTemplate restTemplate = new RestTemplate();
-            String authServiceUrl = USER_MICROSERVICE_BASE_URL_LOC + "/preHitter";
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            HttpEntity<String> entity = new HttpEntity<>(headers);
-            ResponseEntity<String> authResponse = restTemplate.exchange(authServiceUrl, HttpMethod.GET, entity, String.class);
-            if (authResponse.getStatusCode() != HttpStatus.OK) {
-                Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.USER.name());
-                if(adminMicroService.isPresent()){
-                    adminMicroService.get().setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(adminMicroService.get());
-                } else {
-                    MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                    newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.USER);
-                    newMicroServiceCheckLogger.setStatus(STATUS.UP);
-                    microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-                }
-            }
-        }catch (Exception e){
-            Optional<MicroserviceCheckLogger> adminMicroService = microserviceCheckLoggerRepository.findByMicroserviceName(MICROSERVICE.USER.name());
-            if(adminMicroService.isPresent()){
-                adminMicroService.get().setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(adminMicroService.get());
-            } else {
-                MicroserviceCheckLogger newMicroServiceCheckLogger = new MicroserviceCheckLogger();
-                newMicroServiceCheckLogger.setMicroservice(MICROSERVICE.USER);
-                newMicroServiceCheckLogger.setStatus(STATUS.DOWN);
-                microserviceCheckLoggerRepository.save(newMicroServiceCheckLogger);
-            }
-        }
-    }
-
 }

@@ -25,17 +25,17 @@ public class ScheduleMaster{
         this.microServiceChecker = microServiceChecker;
     }
 
-    @Scheduled(cron = "0 * * * * ?") // every 1 mint
-    public void deleteExpiredOtp() {
-        ZonedDateTime now = ZonedDateTime.now();
-        List<CustomerVerificationCode> expiredOtpList = customerVerificationCodeRepository.findByExpiryDateBefore(now);
-        for (CustomerVerificationCode CustomerVerificationCode : expiredOtpList) {
-            customerVerificationCodeRepository.delete(CustomerVerificationCode);
-        }
-        System.out.println("Found >> "+expiredOtpList.size()+" expired OTPs");
-    }
+//    @Scheduled(cron = "0 * * * * ?") // every 1 mint
+//    public void deleteExpiredOtp() {
+//        ZonedDateTime now = ZonedDateTime.now();
+//        List<CustomerVerificationCode> expiredOtpList = customerVerificationCodeRepository.findByExpiryDateBefore(now);
+//        for (CustomerVerificationCode CustomerVerificationCode : expiredOtpList) {
+//            customerVerificationCodeRepository.delete(CustomerVerificationCode);
+//        }
+//        System.out.println("Found >> "+expiredOtpList.size()+" expired OTPs");
+//    }
 
-    @Scheduled(cron = "0 */2 * * * ?")
+    @Scheduled(cron = "0 */1 * * * ?")
     public void runEvery5Minutes(){
         microServiceChecker.checkMicroServices();
     }
