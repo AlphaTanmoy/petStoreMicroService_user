@@ -12,26 +12,37 @@ import java.util.List;
 @Component
 public class ScheduleMaster{
 
-    private final CustomerVerificationCodeRepository CustomerVerificationCodeRepository;
+    private final CustomerVerificationCodeRepository customerVerificationCodeRepository;
     private final CustomerInfoLoggerRepository customerInfoLoggerRepository;
+    private final MicroServiceChecker microServiceChecker;
 
     public ScheduleMaster(
-            CustomerVerificationCodeRepository CustomerVerificationCodeRepository,
-            CustomerInfoLoggerRepository customerInfoLoggerRepository
+            CustomerVerificationCodeRepository customerVerificationCodeRepository,
+            CustomerInfoLoggerRepository customerInfoLoggerRepository,
+            MicroServiceChecker microServiceChecker
     ) {
-        this.CustomerVerificationCodeRepository = CustomerVerificationCodeRepository;
+        this.customerVerificationCodeRepository = customerVerificationCodeRepository;
         this.customerInfoLoggerRepository = customerInfoLoggerRepository;
+        this.microServiceChecker = microServiceChecker;
     }
 
     @Scheduled(cron = "0 * * * * ?") // every 1 mint
     public void deleteExpiredOtp() {
         LocalDateTime now = LocalDateTime.now();
-        List<CustomerVerificationCode> expiredOtpList = CustomerVerificationCodeRepository.findByExpiryDateBefore(now);
+        List<CustomerVerificationCode> expiredOtpList = customerVerificationCodeRepository.findByExpiryDateBefore(now);
         for (CustomerVerificationCode CustomerVerificationCode : expiredOtpList) {
-            CustomerVerificationCodeRepository.delete(CustomerVerificationCode);
+            customerVerificationCodeRepository.delete(CustomerVerificationCode);
         }
         System.out.println("Found >> "+expiredOtpList.size()+" expired OTPs");
     }
+
+    @Scheduled(cron = "0 */5 * * * ?")
+    public void runEvery5Minutes(){
+        microServiceChecker.checkMicroServices();
+    }
+
+    @Scheduled(cron = "0 */5 * * * ?")
+    public void runEvery5Hours(){}
 
     @Scheduled(cron = "0 0 0 * * ?")  // This runs every day at midnight
     public void remove24HoursLog() {
