@@ -15,7 +15,7 @@ import com.store.user.response.AuthResponse;
 import com.store.user.response.GetProfile;
 import com.store.user.service.CustomerAuthService;
 import com.store.user.service.CustomerService;
-import com.store.user.service.VerificationCodeService;
+import com.store.user.service.CustomerVerificationCodeService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,11 +33,11 @@ public class AuthController {
     private final CustomerAuthService authService;
     private final JwtProvider jwtProvider;
     private final CustomerService customerService;
-    private final VerificationCodeService verificationCodeService;
+    private final CustomerVerificationCodeService customerVerificationCodeService;
 
     @PostMapping("/saveOtp/{emailId}")
     public String SaveOtp(@PathVariable String emailId){
-        RESPONSE_TYPE response = verificationCodeService.saveOtpFromAuthMicroService(emailId);
+        RESPONSE_TYPE response = customerVerificationCodeService.saveOtpFromAuthMicroService(emailId);
         if(response==RESPONSE_TYPE.FAIL) return "fail";
         else return "success";
     }

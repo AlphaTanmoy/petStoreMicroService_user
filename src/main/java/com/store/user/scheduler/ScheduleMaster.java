@@ -1,8 +1,8 @@
 package com.store.user.scheduler;
 
-import com.store.user.model.VerificationCode;
+import com.store.user.model.CustomerVerificationCode;
 import com.store.user.repo.CustomerInfoLoggerRepository;
-import com.store.user.repo.VerificationCodeRepository;
+import com.store.user.repo.CustomerVerificationCodeRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -12,23 +12,23 @@ import java.util.List;
 @Component
 public class ScheduleMaster{
 
-    private final VerificationCodeRepository verificationCodeRepository;
+    private final CustomerVerificationCodeRepository CustomerVerificationCodeRepository;
     private final CustomerInfoLoggerRepository customerInfoLoggerRepository;
 
     public ScheduleMaster(
-            VerificationCodeRepository verificationCodeRepository,
+            CustomerVerificationCodeRepository CustomerVerificationCodeRepository,
             CustomerInfoLoggerRepository customerInfoLoggerRepository
     ) {
-        this.verificationCodeRepository = verificationCodeRepository;
+        this.CustomerVerificationCodeRepository = CustomerVerificationCodeRepository;
         this.customerInfoLoggerRepository = customerInfoLoggerRepository;
     }
 
     @Scheduled(cron = "0 * * * * ?") // every 1 mint
     public void deleteExpiredOtp() {
         LocalDateTime now = LocalDateTime.now();
-        List<VerificationCode> expiredOtpList = verificationCodeRepository.findByExpiryDateBefore(now);
-        for (VerificationCode verificationCode : expiredOtpList) {
-            verificationCodeRepository.delete(verificationCode);
+        List<CustomerVerificationCode> expiredOtpList = CustomerVerificationCodeRepository.findByExpiryDateBefore(now);
+        for (CustomerVerificationCode CustomerVerificationCode : expiredOtpList) {
+            CustomerVerificationCodeRepository.delete(CustomerVerificationCode);
         }
         System.out.println("Found >> "+expiredOtpList.size()+" expired OTPs");
     }

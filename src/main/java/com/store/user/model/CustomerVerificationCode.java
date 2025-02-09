@@ -9,8 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import static com.store.user.config.KeywordsAndConstants.OTP_EXPIRED_IN_MINUTES;
 
@@ -20,8 +19,8 @@ import static com.store.user.config.KeywordsAndConstants.OTP_EXPIRED_IN_MINUTES;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-@Table(name = "verification_code")
-public class VerificationCode extends SuperEntityWithoutExpiry {
+@Table(name = "customer_verification_code")
+public class CustomerVerificationCode extends SuperEntityWithoutExpiry {
 
     private String otp;
 
@@ -31,5 +30,5 @@ public class VerificationCode extends SuperEntityWithoutExpiry {
     private Customer customer;
 
     @Column(nullable = false)
-    private LocalDateTime expiryDate =LocalDateTime.now().plusMinutes(OTP_EXPIRED_IN_MINUTES);
+    private ZonedDateTime expiryDate =ZonedDateTime.now().plusMinutes(OTP_EXPIRED_IN_MINUTES);
 }

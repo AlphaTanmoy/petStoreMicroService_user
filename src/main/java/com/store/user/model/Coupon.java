@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.LocalDate;
+
+import java.time.ZonedDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -21,9 +22,9 @@ public class Coupon extends SuperEntity {
 
     private double discountPercentage;
 
-    private LocalDate validityStartDate;
+    private ZonedDateTime validityStartDate;
 
-    private LocalDate validityEndDate;
+    private ZonedDateTime validityEndDate;
 
     private double minimumOrderValue;
 

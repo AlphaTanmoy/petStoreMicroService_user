@@ -1,9 +1,12 @@
 package com.store.user.utils;
 
 import com.store.user.config.KeywordsAndConstants;
+import com.store.user.error.BadRequestException;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.security.MessageDigest;
 import java.util.Base64;
@@ -37,6 +40,21 @@ public class EncryptionUtils {
         MessageDigest digest = MessageDigest.getInstance(KeywordsAndConstants.MESSAGE_DIGEST_ALGORITHM);
         return digest.digest(secretKey.getBytes(KeywordsAndConstants.UTF_8));
     }
+
+    public String decryptOffset(String toDecrypt) {
+        try {
+            String password = KeywordsAndConstants.ENCRYPTION_PASSWORD_CHOICE_ONE; // Using only one type
+            String salt = KeywordsAndConstants.ENCRYPTION_PASSWORD_SALT_CHOICE;
+
+            IvParameterSpec ivParameterSpec = AESUtil.generateIv();
+            SecretKey key = AESUtil.getKeyFromPassword(password, salt);
+
+            return AESUtil.decryptPasswordBased(toDecrypt, key, ivParameterSpec);
+        } catch (Exception ex) {
+            throw new BadRequestException("Decryption failed >> "+ex);
+        }
+    }
+
 }
 
 

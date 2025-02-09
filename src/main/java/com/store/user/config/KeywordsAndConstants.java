@@ -11,6 +11,10 @@ public class KeywordsAndConstants {
     public static final String SELLER_MICROSERVICE_BASE_URL_LOC = "http://localhost:8086";
     public static final String USER_MICROSERVICE_BASE_URL_LOC = "http://localhost:8087";
 
+    public static final String ENCRYPTION_PASSWORD_CHOICE_ONE = "/h9lW;L-~n>l8j$!IQJHx1Yx{0Ot7:j%W;5b[^8]q}\"G]9jRJgc#P;pDakVkB}G62twX+M6CpscBD;a=;";
+    public static final String ENCRYPTION_PASSWORD_SALT_CHOICE = "12345";
+    public static final Integer DEFAULT_PAGE_SIZE = 5;
+    public static final String DATE_TIME_FORMAT_FROM_FRONTEND = "yyyy-MM-ddTHH:mm";
     public static final String HEADER_AUTH_TOKEN="Alpha";
     public static final String API_KEY_PREFIX="Alpha-Key-";
     public static final String ALGORITHM = "AES";

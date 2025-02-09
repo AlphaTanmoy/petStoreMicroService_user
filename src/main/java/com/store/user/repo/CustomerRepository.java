@@ -1,9 +1,17 @@
 package com.store.user.repo;
 
+import com.store.user.collection.FetchMostRecentInterface;
+import com.store.user.collection.GetUsers;
 import com.store.user.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
+
 
 public interface CustomerRepository  extends JpaRepository<Customer,String> {
 
@@ -14,4 +22,113 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
             , nativeQuery = true
     )
     Long countUserByEmail(@Param("email") String email);
+
+    @Query(
+            value = "Select id as id, created_date as createdDate " +
+                    "FROM customer " +
+                    "ORDER BY created_date DESC " +
+                    "LIMIT 1 ", nativeQuery = true
+    )
+    Optional<FetchMostRecentInterface> findTop1ByOrderByCreatedDateDesc();
+
+    @Query(
+            value = "Select COUNT(*) " +
+                    "FROM customer " +
+                    "WHERE data_status = :dataStatus " +
+                    "AND (:considerFromDate = false OR created_date >= :fromDate) " +
+                    "AND (:considerToDate = false OR created_date <= :toDate)"
+                    , nativeQuery = true
+    )
+    Long findCountWithOutOffsetIdAndDate(
+            @Param("fromDate") ZonedDateTime fromDate,
+            @Param("considerFromDate") Boolean considerFromDate,
+            @Param("toDate") ZonedDateTime toDate,
+            @Param("considerToDate") Boolean considerToDate,
+            @Param("dataStatus")String dataStatus
+    );
+
+    @Query(
+            value = "Select " +
+                    "id as id, " +
+                    "full_name as fullName, " +
+                    "email as emailId, " +
+                    "tire_code as tireCode, " +
+                    "role as userRole, " +
+                    "is_prime_member as isPrimeMember, " +
+                    "created_date as createdDate " +
+                    "FROM customer " +
+                    "WHERE data_status = :dataStatus " +
+                    "AND full_name ILIKE CONCAT('%', :userName, '%') " +
+                    "AND (:considerFromDate = false OR created_date >= :fromDate) " +
+                    "AND (:considerToDate = false OR created_date <= :toDate)"
+            , nativeQuery = true
+    )
+    List<GetUsers> findDataWithOutOffsetIdAndDate(
+            @Param("fromDate") ZonedDateTime fromDate,
+            @Param("considerFromDate") Boolean considerFromDate,
+            @Param("toDate") ZonedDateTime toDate,
+            @Param("considerToDate") Boolean considerToDate,
+            @Param("dataStatus") String dataStatus,
+            @Param("userName") String userName
+    );
+
+    @Query(
+            value = "Select " +
+                    "id as id, " +
+                    "full_name as fullName, " +
+                    "email as emailId, " +
+                    "tire_code as tireCode, " +
+                    "role as userRole, " +
+                    "is_prime_member as isPrimeMember, " +
+                    "created_date as createdDate " +
+                    "FROM customer " +
+                    "WHERE created_date < :offsetDateFinal " +
+                    "AND data_status = :dataStatus " +
+                    "AND full_name ILIKE CONCAT('%', :userName, '%') " +
+                    "AND (:considerFromDate = false OR created_date >= :fromDate) " +
+                    "AND (:considerToDate = false OR created_date <= :toDate) " +
+                    "LIMIT :limit"
+            , nativeQuery = true
+    )
+    List<GetUsers> findDataWithOutOffsetId(
+            @Param("fromDate") ZonedDateTime fromDate,
+            @Param("considerFromDate") Boolean considerFromDate,
+            @Param("toDate") ZonedDateTime toDate,
+            @Param("considerToDate") Boolean considerToDate,
+            @Param("dataStatus") String dataStatus,
+            @Param("userName") String userName,
+            @Param("limit") Integer limit,
+            @Param("offsetDateFinal") ZonedDateTime offsetDateFinal
+    );
+
+    @Query(
+            value = "Select " +
+                    "id as id, " +
+                    "full_name as fullName, " +
+                    "email as emailId, " +
+                    "tire_code as tireCode, " +
+                    "role as userRole, " +
+                    "is_prime_member as isPrimeMember, " +
+                    "created_date as createdDate " +
+                    "FROM customer " +
+                    "WHERE id > :offsetId " +
+                    "AND created_date = :offsetDateFinal " +
+                    "AND data_status = :dataStatus " +
+                    "AND full_name ILIKE CONCAT('%', :userName, '%') " +
+                    "AND (:considerFromDate = false OR created_date >= :fromDate) " +
+                    "AND (:considerToDate = false OR created_date <= :toDate)" +
+                    "LIMIT :limit"
+            , nativeQuery = true
+    )
+    List<GetUsers> findDataWithOffsetId(
+            @Param("fromDate") ZonedDateTime fromDate,
+            @Param("considerFromDate") Boolean considerFromDate,
+            @Param("toDate") ZonedDateTime toDate,
+            @Param("considerToDate") Boolean considerToDate,
+            @Param("dataStatus") String dataStatus,
+            @Param("userName") String userName,
+            @Param("limit") Integer limit,
+            @Param("offsetDateFinal") ZonedDateTime offsetDateFinal,
+            @Param("offsetId") String offsetId
+    );
 }

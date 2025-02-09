@@ -85,7 +85,7 @@ public class JwtProvider {
 	}
 
 	public String getRoleFromJwtToken(String jwt) {
-		jwt=jwt.substring(7);
+		jwt=jwt.substring(6);
 		Claims claims=Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(jwt).getBody();
 		return String.valueOf(claims.get("role"));
 	}

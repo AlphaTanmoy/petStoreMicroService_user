@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 import static com.store.user.config.KeywordsAndConstants.AUTH_MICROSERVICE_BASE_URL_LOC;
 
@@ -43,7 +44,7 @@ public class CustomerAuthService {
     private final CustomerLogsRepository customerLogsRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
-    private final VerificationCodeRepository verificationCodeRepository;
+    private final CustomerVerificationCodeRepository customerVerificationCodeRepository;
     private final EmailService emailService;
     private final CustomUserServiceImplementation customUserDetails;
     private final CustomerInfoLoggerRepository customerInfoLoggerRepository;
@@ -68,11 +69,11 @@ public class CustomerAuthService {
             if(user==null) throw new BadRequestException("User not found with this email!");
         }
 
-        List<VerificationCode> isExist = verificationCodeRepository
+        List<CustomerVerificationCode> isExist = customerVerificationCodeRepository
                 .findByEmail(email);
 
         if (!isExist.isEmpty()) {
-            verificationCodeRepository.delete(isExist.get(0));
+            customerVerificationCodeRepository.delete(isExist.get(0));
         }
 
         String otp = OtpUtils.generateOTP();
@@ -80,10 +81,10 @@ public class CustomerAuthService {
         if(userCount==0) message = "OTP Generated for Sign Up Request";
         else message = "OTP Generated for Login Request";
 
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setOtp(otp);
-        verificationCode.setEmail(email);
-        verificationCodeRepository.save(verificationCode);
+        CustomerVerificationCode CustomerVerificationCode = new CustomerVerificationCode();
+        CustomerVerificationCode.setOtp(otp);
+        CustomerVerificationCode.setEmail(email);
+        customerVerificationCodeRepository.save(CustomerVerificationCode);
 
         String subject = KeywordsAndConstants.OTP_SUBJECT_FOR_LOGIN;
         String text = KeywordsAndConstants.OTP_TEXT_FOR_LOGIN;
@@ -112,12 +113,12 @@ public class CustomerAuthService {
             }
         }
 
-        List<VerificationCode> verificationCode = verificationCodeRepository.findByEmail(req.getEmail());
-        if (verificationCode.isEmpty()) {
+        List<CustomerVerificationCode> CustomerVerificationCode = customerVerificationCodeRepository.findByEmail(req.getEmail());
+        if (CustomerVerificationCode.isEmpty()) {
             throw new BadRequestException("No verification code found for this email");
         }
 
-        if (!verificationCode.get(0).getOtp().equals(req.getOtp())) {
+        if (!CustomerVerificationCode.get(0).getOtp().equals(req.getOtp())) {
             throw new BadRequestException("Wrong OTP");
         }
 
@@ -131,7 +132,7 @@ public class CustomerAuthService {
             Map<String, Object> authRequestBody = new HashMap<>();
             authRequestBody.put("fullName", req.getFullName());
             authRequestBody.put("email", req.getEmail());
-            authRequestBody.put("otp", verificationCode.get(0).getOtp());
+            authRequestBody.put("otp", CustomerVerificationCode.get(0).getOtp());
             authRequestBody.put("mobileNumber", req.getMobileNumber());
             authRequestBody.put("microServiceName", microservice);
 
@@ -151,8 +152,8 @@ public class CustomerAuthService {
             createdUser = customerRepository.save(createdUser);
             customerRepository.flush();
 
-            verificationCode.get(0).setCustomer(createdUser);
-            verificationCodeRepository.save(verificationCode.get(0));
+            CustomerVerificationCode.get(0).setCustomer(createdUser);
+            customerVerificationCodeRepository.save(CustomerVerificationCode.get(0));
 
             String jwtToken = jwtProvider.generateToken(createdUser.getId(), createdUser.getEmail(), createdUser.getRole());
 
@@ -266,13 +267,13 @@ public class CustomerAuthService {
             System.out.println("sign in userDetails - null ");
             throw new BadCredentialsException("Invalid username or password");
         }
-        List<VerificationCode> verificationCode = verificationCodeRepository.findByEmail(email);
+        List<CustomerVerificationCode> CustomerVerificationCode = customerVerificationCodeRepository.findByEmail(email);
 
-        if (verificationCode == null || !verificationCode.get(0).getOtp().equals(otp)) {
+        if (CustomerVerificationCode == null || !CustomerVerificationCode.get(0).getOtp().equals(otp)) {
             throw new BadRequestException("wrong otp...");
         }
-        if (LocalDateTime.now().isAfter(verificationCode.get(0).getExpiryDate())) {
-            verificationCodeRepository.delete(verificationCode.get(0));
+        if (ZonedDateTime.now().isAfter(CustomerVerificationCode.get(0).getExpiryDate())) {
+            customerVerificationCodeRepository.delete(CustomerVerificationCode.get(0));
             throw new BadRequestException("OTP expired...");
         }
         return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
