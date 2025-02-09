@@ -1,6 +1,6 @@
-package com.store.user.config;
+package com.store.user.utils;
 
-import com.store.user.utils.EncryptionUtils;
+import com.store.user.config.KeywordsAndConstants;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -29,7 +29,7 @@ public class JwtTokenValidator extends OncePerRequestFilter {
         String jwt = request.getHeader(KeywordsAndConstants.JWT_HEADER);
 
         if (jwt != null) {
-            jwt = jwt.substring(6); // Remove "Bearer " prefix
+            jwt = jwt.substring(6);
 
             try {
                 // Create a signing key

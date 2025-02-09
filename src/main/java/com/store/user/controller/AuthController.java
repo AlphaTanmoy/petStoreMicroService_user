@@ -1,6 +1,6 @@
 package com.store.user.controller;
 
-import com.store.user.config.JwtProvider;
+import com.store.user.utils.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.MICROSERVICE;
 import com.store.user.enums.RESPONSE_TYPE;

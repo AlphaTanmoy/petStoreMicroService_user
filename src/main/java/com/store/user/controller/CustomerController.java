@@ -1,7 +1,7 @@
 package com.store.user.controller;
 
-import com.store.user.collection.GetUsers;
-import com.store.user.config.JwtProvider;
+import com.store.user.collection.GetCustomers;
+import com.store.user.utils.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
@@ -12,7 +12,6 @@ import com.store.user.utils.Processor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +27,7 @@ public class CustomerController {
     private final Processor processor;
 
     @GetMapping("/getAll")
-    PaginationResponse<GetUsers> getAllCustomers(
+    PaginationResponse<GetCustomers> getAllCustomers(
             @RequestHeader(value = KeywordsAndConstants.HEADER_AUTH_TOKEN, required = false) String token,
             @RequestParam(value = "giveCount", required = false, defaultValue = "false") boolean giveCount,
             @RequestParam(value = "giveData", required = false, defaultValue = "true") boolean giveData,

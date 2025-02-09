@@ -1,11 +1,11 @@
-package com.store.user.config;
+package com.store.user.utils;
 
+import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.TIRE_CODE;
 import com.store.user.enums.USER_ROLE;
 import com.store.user.error.BadRequestException;
 import com.store.user.model.Customer;
 import com.store.user.repo.CustomerRepository;
-import com.store.user.utils.EncryptionUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;

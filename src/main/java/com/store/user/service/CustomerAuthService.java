@@ -1,6 +1,6 @@
 package com.store.user.service;
 
-import com.store.user.config.JwtProvider;
+import com.store.user.utils.JwtProvider;
 import com.store.user.config.KeywordsAndConstants;
 import com.store.user.enums.INFO_LOG_TYPE;
 import com.store.user.enums.MICROSERVICE;
@@ -31,7 +31,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 import static com.store.user.config.KeywordsAndConstants.AUTH_MICROSERVICE_BASE_URL_LOC;

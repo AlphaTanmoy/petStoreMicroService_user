@@ -12,7 +12,7 @@ import java.util.Set;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetUserFullDetails {
+public class GetCustomerFullDetails {
     String id;
     String fullName;
     String emailId;

@@ -10,7 +10,7 @@ import java.time.Instant;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetUsers {
+public class GetCustomers {
     String id;
     String fullName;
     String emailId;

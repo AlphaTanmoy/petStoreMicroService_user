@@ -1,7 +1,7 @@
 package com.store.user.repo;
 
 import com.store.user.collection.FetchMostRecentInterface;
-import com.store.user.collection.GetUsers;
+import com.store.user.collection.GetCustomers;
 import com.store.user.model.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -63,7 +63,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "ORDER BY created_date DESC, id DESC"
             , nativeQuery = true
     )
-    List<GetUsers> findDataWithOutOffsetIdAndDate(
+    List<GetCustomers> findDataWithOutOffsetIdAndDate(
             @Param("fromDate") ZonedDateTime fromDate,
             @Param("considerFromDate") Boolean considerFromDate,
             @Param("toDate") ZonedDateTime toDate,
@@ -91,7 +91,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "LIMIT :limit"
             , nativeQuery = true
     )
-    List<GetUsers> findDataWithOutOffsetId(
+    List<GetCustomers> findDataWithOutOffsetId(
             @Param("fromDate") ZonedDateTime fromDate,
             @Param("considerFromDate") Boolean considerFromDate,
             @Param("toDate") ZonedDateTime toDate,
@@ -122,7 +122,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "LIMIT :limit"
             , nativeQuery = true
     )
-    List<GetUsers> findDataWithOffsetId(
+    List<GetCustomers> findDataWithOffsetId(
             @Param("fromDate") ZonedDateTime fromDate,
             @Param("considerFromDate") Boolean considerFromDate,
             @Param("toDate") ZonedDateTime toDate,

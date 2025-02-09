@@ -1,7 +1,7 @@
 package com.store.user.service;
 
 import com.store.user.collection.FetchMostRecentInterface;
-import com.store.user.collection.GetUsers;
+import com.store.user.collection.GetCustomers;
 import com.store.user.enums.DATA_STATUS;
 import com.store.user.error.BadRequestException;
 import com.store.user.model.Customer;
@@ -51,7 +51,7 @@ public class CustomerService {
         customerRepository.save(Customer);
     }
 
-    public PaginationResponse<GetUsers> getAllCustomers(
+    public PaginationResponse<GetCustomers> getAllCustomers(
             String offsetToken,
             boolean considerMaxDateRange,
             List<FilterOption> toRetFilterOption,
@@ -91,7 +91,7 @@ public class CustomerService {
             offsetDateFinal = ZonedDateTime.ofInstant(instant.getCreatedDate().plusNanos(1000), ZoneId.of("UTC"));
         }
 
-        List<GetUsers> toReturnAllUsers = new ArrayList<>();
+        List<GetCustomers> toReturnAllUsers = new ArrayList<>();
         long giveCountData = 0;
 
         boolean considerFromDate = (fromDateFinal != null);
@@ -109,7 +109,7 @@ public class CustomerService {
 
         if (giveData) {
             if (considerMaxDateRange && "MAX".equals(dateRangeType)) {
-                List<GetUsers> allUsers = customerRepository.findDataWithOutOffsetIdAndDate(
+                List<GetCustomers> allUsers = customerRepository.findDataWithOutOffsetIdAndDate(
                         fromDateFinal,
                         considerFromDate,
                         toDateFinal,
@@ -120,7 +120,7 @@ public class CustomerService {
                 toReturnAllUsers.addAll(allUsers);
             } else {
                 if (offsetId.isEmpty()) {
-                    List<GetUsers> userFirstPage = customerRepository.findDataWithOutOffsetId(
+                    List<GetCustomers> userFirstPage = customerRepository.findDataWithOutOffsetId(
                             fromDateFinal,
                             considerFromDate,
                             toDateFinal,
@@ -137,7 +137,7 @@ public class CustomerService {
 
                     toReturnAllUsers.addAll(userFirstPage);
                 } else {
-                    List<GetUsers> usersNextPageWithSameData = customerRepository.findDataWithOffsetId(
+                    List<GetCustomers> usersNextPageWithSameData = customerRepository.findDataWithOffsetId(
                             fromDateFinal,
                             considerFromDate,
                             toDateFinal,
@@ -151,7 +151,7 @@ public class CustomerService {
 
                     int nextPageSize = limit - usersNextPageWithSameData.size();
 
-                    List<GetUsers> userNextPage = customerRepository.findDataWithOutOffsetId(
+                    List<GetCustomers> userNextPage = customerRepository.findDataWithOutOffsetId(
                             fromDateFinal,
                             considerFromDate,
                             toDateFinal,
@@ -180,7 +180,7 @@ public class CustomerService {
                 );
 
                 return new PaginationResponse<>(
-                        ConverterStringToObjectList.sanitizeForOutput(toReturnAllUsers, GetUsers.class),
+                        ConverterStringToObjectList.sanitizeForOutput(toReturnAllUsers, GetCustomers.class),
                         offsetTokenEncoded,
                         giveCountData,
                         toRetFilterOption
