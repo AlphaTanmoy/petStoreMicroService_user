@@ -60,7 +60,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "AND full_name ILIKE CONCAT('%', :userName, '%') " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
                     "AND (:considerToDate = false OR created_date <= :toDate) " +
-                    "ORDER BY created_date DESC"
+                    "ORDER BY created_date DESC, id DESC"
             , nativeQuery = true
     )
     List<GetUsers> findDataWithOutOffsetIdAndDate(
@@ -87,7 +87,7 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "AND full_name ILIKE CONCAT('%', :userName, '%') " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
                     "AND (:considerToDate = false OR created_date <= :toDate) " +
-                    "ORDER BY created_date, id DESC " +
+                    "ORDER BY created_date DESC, id DESC " +
                     "LIMIT :limit"
             , nativeQuery = true
     )
@@ -112,13 +112,13 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
                     "is_prime_member as isPrimeMember, " +
                     "created_date as createdDate " +
                     "FROM customer " +
-                    "WHERE id > :offsetId " +
+                    "WHERE id < :offsetId " +
                     "AND created_date = :offsetDateFinal " +
                     "AND data_status = :dataStatus " +
                     "AND full_name ILIKE CONCAT('%', :userName, '%') " +
                     "AND (:considerFromDate = false OR created_date >= :fromDate) " +
                     "AND (:considerToDate = false OR created_date <= :toDate) " +
-                    "ORDER BY created_date, id DESC " +
+                    "ORDER BY created_date DESC, id DESC " +
                     "LIMIT :limit"
             , nativeQuery = true
     )
@@ -133,4 +133,5 @@ public interface CustomerRepository  extends JpaRepository<Customer,String> {
             @Param("offsetDateFinal") ZonedDateTime offsetDateFinal,
             @Param("offsetId") String offsetId
     );
+
 }
