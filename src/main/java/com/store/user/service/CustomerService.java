@@ -63,7 +63,7 @@ public class CustomerService {
             boolean showInActive,
             String userName
     ) throws Exception {
-        ZonedDateTime offsetDateFinal = null;
+        ZonedDateTime offsetDateFinal;
         String offsetId = "";
 
         DATA_STATUS dataStatus = DATA_STATUS.ACTIVE;
@@ -81,7 +81,13 @@ public class CustomerService {
             offsetDateFinal = decryptedOffsetDate.get();
             offsetId = splits[1];
         } else {
-            offsetDateFinal = findOffsetDateFinal();
+            Optional<FetchMostRecentInterface> firstCreated = customerRepository.findTop1ByOrderByCreatedDateDesc();
+            if (firstCreated.isEmpty()) {
+                offsetDateFinal = null;
+            } else {
+                FetchMostRecentInterface instant = firstCreated.get();
+                offsetDateFinal = ZonedDateTime.ofInstant(instant.getCreatedDate().plusNanos(1000), ZoneId.of("UTC"));
+            }
         }
 
         if (offsetDateFinal == null) {
