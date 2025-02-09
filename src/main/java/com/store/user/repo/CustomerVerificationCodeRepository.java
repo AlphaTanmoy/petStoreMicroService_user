@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface CustomerVerificationCodeRepository extends JpaRepository<CustomerVerificationCode, String> {
@@ -34,6 +35,6 @@ public interface CustomerVerificationCodeRepository extends JpaRepository<Custom
     );
 
 
-    List<CustomerVerificationCode> findByExpiryDateBefore(LocalDateTime now);
+    List<CustomerVerificationCode> findByExpiryDateBefore(ZonedDateTime now);
 }
 
