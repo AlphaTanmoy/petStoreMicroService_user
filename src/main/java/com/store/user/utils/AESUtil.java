@@ -14,14 +14,11 @@ import java.util.Base64;
 @Component
 public class AESUtil {
 
-    public static SecretKey getKeyFromPassword(String password, String salt) {
-        try {
-            SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-            KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
-            return new SecretKeySpec(factory.generateSecret(spec).getEncoded(), "AES");
-        } catch (Exception e) {
-            throw new RuntimeException("Error while generating key from password", e);
-        }
+    public static SecretKey getKeyFromPassword(String password, String salt) throws Exception {
+        SecretKeyFactory factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+        KeySpec spec = new PBEKeySpec(password.toCharArray(), salt.getBytes(), 65536, 256);
+        byte[] keyBytes = factory.generateSecret(spec).getEncoded();
+        return new SecretKeySpec(keyBytes, "AES");
     }
 
     public static String decryptPasswordBased(String cipherText, SecretKey key, IvParameterSpec iv) {
